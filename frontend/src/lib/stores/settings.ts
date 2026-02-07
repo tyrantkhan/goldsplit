@@ -49,7 +49,7 @@ export async function initSettings() {
 }
 
 export async function saveSettings(updated: Settings): Promise<boolean> {
-  const ok = await UpdateSettings(updated);
+  const ok = await UpdateSettings(updated as any);
   if (ok) {
     settings.set(updated);
   }

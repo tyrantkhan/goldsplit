@@ -2,6 +2,7 @@
   import { CreateTemplate } from '../../../wailsjs/go/main/App';
   import { setTemplate, viewMode } from '../stores/splits';
   import TopNav from './TopNav.svelte';
+  import type { TemplateData } from '../types';
 
   let name = $state('');
   let segmentsText = $state('');
@@ -16,7 +17,7 @@
 
     const data = await CreateTemplate(name.trim(), names);
     if (data) {
-      setTemplate(data);
+      setTemplate(data as TemplateData);
     }
   }
 
