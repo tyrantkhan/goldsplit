@@ -5,7 +5,7 @@
   import TopNav from './TopNav.svelte';
   import IconSettings from '../icons/IconSettings.svelte';
   import IconPlus from '../icons/IconPlus.svelte';
-  import type { TemplateSummary } from '../types';
+  import type { TemplateSummary, TemplateData } from '../types';
 
   let templates: TemplateSummary[] = $state([]);
 
@@ -21,7 +21,7 @@
   async function handleLoad(id: string) {
     const data = await LoadTemplate(id);
     if (data) {
-      setTemplate(data);
+      setTemplate(data as TemplateData);
     }
   }
 

@@ -2,6 +2,7 @@
   import { CreateAttempts } from '../../../wailsjs/go/main/App';
   import { currentTemplate, setAttempts, viewMode } from '../stores/splits';
   import TopNav from './TopNav.svelte';
+  import type { AttemptsData } from '../types';
 
   let name = $state('');
   let categoryName = $state('');
@@ -11,7 +12,7 @@
 
     const data = await CreateAttempts($currentTemplate.id, name.trim(), categoryName.trim());
     if (data) {
-      setAttempts(data);
+      setAttempts(data as AttemptsData);
     }
   }
 

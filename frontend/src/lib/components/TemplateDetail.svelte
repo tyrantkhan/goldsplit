@@ -6,7 +6,7 @@
   import IconSettings from '../icons/IconSettings.svelte';
   import IconEdit from '../icons/IconEdit.svelte';
   import IconPlus from '../icons/IconPlus.svelte';
-  import type { AttemptsSummary } from '../types';
+  import type { AttemptsSummary, AttemptsData, TemplateData } from '../types';
 
   let categories: AttemptsSummary[] = $state([]);
   let editing = $state(false);
@@ -28,7 +28,7 @@
   async function handleLoad(id: string) {
     const data = await LoadAttempts(id);
     if (data) {
-      setAttempts(data);
+      setAttempts(data as AttemptsData);
     }
   }
 
@@ -60,7 +60,7 @@
 
     const data = await UpdateTemplate($currentTemplate.id, editName.trim(), names);
     if (data) {
-      currentTemplate.set(data);
+      currentTemplate.set(data as TemplateData);
     }
     editing = false;
   }

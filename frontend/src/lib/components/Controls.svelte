@@ -37,7 +37,7 @@
   async function handlePrimary() {
     if ($timerState === 'idle' || $timerState === 'running') {
       await StartSplit();
-      if ($timerState !== 'finished') {
+      if (($timerState as string) !== 'finished') {
         fetchDeltas();
       }
     } else if ($timerState === 'paused') {
@@ -80,7 +80,7 @@
   <div class="controls">
     {#if showPrimary}
       <Tooltip.Root>
-        <Tooltip.Trigger asChild>
+        <Tooltip.Trigger>
           {#snippet child({ props })}
             <button {...props} class="btn primary" onclick={handlePrimary}>
               {primaryLabel}
@@ -95,7 +95,7 @@
 
     {#if showPause}
       <Tooltip.Root>
-        <Tooltip.Trigger asChild>
+        <Tooltip.Trigger>
           {#snippet child({ props })}
             <button {...props} class="btn" onclick={() => TogglePause()}>
               Pause
@@ -110,7 +110,7 @@
 
     {#if showUndo}
       <Tooltip.Root>
-        <Tooltip.Trigger asChild>
+        <Tooltip.Trigger>
           {#snippet child({ props })}
             <button {...props} class="btn small" onclick={() => UndoSplit()}>
               Undo
@@ -125,7 +125,7 @@
 
     {#if showSkip}
       <Tooltip.Root>
-        <Tooltip.Trigger asChild>
+        <Tooltip.Trigger>
           {#snippet child({ props })}
             <button {...props} class="btn small" onclick={() => SkipSplit()}>
               Skip
@@ -140,7 +140,7 @@
 
     {#if showReset}
       <Tooltip.Root>
-        <Tooltip.Trigger asChild>
+        <Tooltip.Trigger>
           {#snippet child({ props })}
             <button {...props} class="btn danger" onclick={() => Reset()}>
               Reset
