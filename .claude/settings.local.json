@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(go version:*)",
+      "Bash(export PATH=\"$HOME/.local/share/mise/installs/go/1.25.6/bin:$PATH\")",
+      "Bash(go test:*)",
+      "Bash(go mod tidy:*)",
+      "Bash(go build:*)",
+      "Bash(wails build:*)"
+    ]
+  }
+}
