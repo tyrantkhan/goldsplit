@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.4](https://github.com/tyrantkhan/goldsplit/compare/v0.0.3...v0.0.4) (2026-02-22)
+
+
+### Features
+
+* add timer stats display, fix completion bug, and UI tweaks ([c9d351d](https://github.com/tyrantkhan/goldsplit/commit/c9d351d8b933605391f3f2521dcf8f358fd677b5)), closes [#12](https://github.com/tyrantkhan/goldsplit/issues/12)
+* timer stats display, completion fix, and UI tweaks ([053ff32](https://github.com/tyrantkhan/goldsplit/commit/053ff32153327f556fd32d94f2c95ac5a58946b1))
+
 ## [0.0.3](https://github.com/tyrantkhan/goldsplit/compare/v0.0.2...v0.0.3) (2026-02-22)
 
 
