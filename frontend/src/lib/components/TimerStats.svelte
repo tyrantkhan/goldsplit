@@ -1,16 +1,20 @@
 <script lang="ts">
-  import { timerState, interpolatedElapsed, elapsedMs, currentSegment, splitTimesMs } from '../stores/timer';
+  import { timerState, interpolatedElapsed, elapsedMs, currentSegment, splitTimesMs, segmentTimesMs } from '../stores/timer';
   import { currentAttempts, deltas } from '../stores/splits';
   import { formatRunTime, formatSegDelta } from '../utils/format';
 
-  // Sum of Best: sum of all bestSegmentMs (null if any segment lacks a best)
+  // Sum of Best: requires ALL segments to have a best time (from history or current run).
+  // For each segment, uses the minimum of historical best and current run's segment time.
   const sumOfBest = $derived.by(() => {
     const segs = $currentAttempts?.segments;
     if (!segs) return null;
+    const runSegs = $segmentTimesMs;
     let sum = 0;
-    for (const seg of segs) {
-      if (!seg.bestSegmentMs) return null;
-      sum += seg.bestSegmentMs;
+    for (let i = 0; i < segs.length; i++) {
+      const hist = segs[i].bestSegmentMs || 0;
+      const curr = (i < runSegs.length && runSegs[i] > 0) ? runSegs[i] : 0;
+      if (!hist && !curr) return null;
+      sum += hist && curr ? Math.min(hist, curr) : (hist || curr);
     }
     return sum;
   });
