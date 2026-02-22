@@ -1,0 +1,7 @@
+pre-push:
+  parallel: true
+  commands:
+    go-lint:
+      run: make lint
+    frontend-check:
+      run: make frontend-check

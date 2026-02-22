@@ -314,12 +314,6 @@
     color: var(--accent);
   }
 
-  .empty {
-    padding: 24px 0;
-    text-align: center;
-    color: var(--text-muted);
-  }
-
   .settings :global(.toggle) {
     width: 40px;
     height: 22px;

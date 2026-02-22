@@ -6,17 +6,14 @@
   import TopNav from './TopNav.svelte';
   import type { AttemptEntry } from '../types';
 
-  let {
-    attemptsId,
-    categoryName: initialCategoryName,
-    segmentNames,
-  }: {
+  const props: {
     attemptsId: string;
     categoryName: string;
     segmentNames: string[];
   } = $props();
 
-  let displayCategoryName = $state(initialCategoryName);
+  let { attemptsId, segmentNames } = $derived(props);
+  let displayCategoryName = $state(props.categoryName);
   let history: AttemptEntry[] = $state([]);
   let editingName = $state(false);
   let newName = $state('');
@@ -361,7 +358,7 @@
     color: var(--text-secondary);
   }
 
-  .split-val, .seg-time {
+  .seg-time {
     font-family: var(--timer-font);
     color: var(--text-secondary);
   }
