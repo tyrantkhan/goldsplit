@@ -71,7 +71,7 @@ jobs:
         id: cache-wails
         uses: actions/cache@v4
         with:
-          path: ~/go/bin/wails
+          path: ~/go/bin
           key: wails-${{ runner.os }}-v2.11.0
       - name: Install Wails CLI
         if: steps.cache-wails.outputs.cache-hit != 'true'
