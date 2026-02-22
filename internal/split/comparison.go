@@ -16,17 +16,48 @@ func ComputeDelta(currentSplitMS, comparisonSplitMS int64) int64 {
 }
 
 // ComparisonSplits returns the reference splits for the given comparison type.
+// For non-PB comparisons, gaps (0 values) are filled from PB when available.
 func ComparisonSplits(att *Attempts, comparison string) []int64 {
+	if comparison == "personal_best" || comparison == "" {
+		return att.PersonalBestSplits()
+	}
+
+	var splits []int64
+
 	switch comparison {
 	case "best_segments":
-		return att.BestSegmentsCumulative()
+		splits = att.BestSegmentsCumulative()
 	case "average_segments":
-		return att.AverageSplits()
+		splits = att.AverageSplits()
 	case "latest_run":
-		return att.LatestRunSplits()
+		splits = att.LatestRunSplits()
 	default:
 		return att.PersonalBestSplits()
 	}
+
+	pb := att.PersonalBestSplits()
+	if pb == nil {
+		return splits
+	}
+
+	if splits == nil {
+		return pb
+	}
+
+	// Extend to cover all PB segments if the primary comparison is shorter.
+	if len(splits) < len(pb) {
+		extended := make([]int64, len(pb))
+		copy(extended, splits)
+		splits = extended
+	}
+
+	for i := 0; i < len(pb) && i < len(splits); i++ {
+		if splits[i] == 0 && pb[i] > 0 {
+			splits[i] = pb[i]
+		}
+	}
+
+	return splits
 }
 
 // ComputeSplitDeltas computes deltas for all completed segments against the given comparison.
@@ -68,9 +99,13 @@ func ComputeSplitDeltas(att *Attempts, currentSplitsMS []int64, comparison strin
 			continue
 		}
 
-		// Check if this is the best segment ever.
-		if i < len(bestSegs) && bestSegs[i] > 0 {
-			d.IsBestEver = segTimeMS < bestSegs[i]
+		// Check if this is the best segment ever (first time always counts).
+		if i < len(bestSegs) {
+			if bestSegs[i] == 0 {
+				d.IsBestEver = true
+			} else {
+				d.IsBestEver = segTimeMS < bestSegs[i]
+			}
 		}
 
 		// Compute delta against comparison.

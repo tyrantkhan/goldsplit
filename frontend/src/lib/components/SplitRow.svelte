@@ -8,6 +8,7 @@
     splitTimeMs = 0,
     comparisonSplitMs = 0,
     personalBestMs = 0,
+    bestSegmentMs = 0,
     delta = null,
     isActive = false,
     isCompleted = false,
@@ -16,18 +17,22 @@
     splitTimeMs?: number;
     comparisonSplitMs?: number;
     personalBestMs?: number;
+    bestSegmentMs?: number;
     delta?: Delta | null;
     isActive?: boolean;
     isCompleted?: boolean;
   } = $props();
 
   const referenceSplitMs = $derived(comparisonSplitMs > 0 ? comparisonSplitMs : personalBestMs);
+  const isFirstTime = $derived(isCompleted && bestSegmentMs === 0 && delta != null && !delta.skipped);
 </script>
 
 <div class="split-row" class:active={isActive} class:completed={isCompleted}>
   <span class="name">{name}</span>
   <span class="delta-col">
-    {#if isCompleted}
+    {#if isFirstTime}
+      <span class="new-segment">New</span>
+    {:else if isCompleted}
       <DeltaDisplay {delta} />
     {/if}
   </span>
@@ -87,5 +92,11 @@
 
   .no-time {
     color: var(--text-muted);
+  }
+
+  .new-segment {
+    font-family: var(--timer-font);
+    font-size: 12px;
+    color: var(--best-time);
   }
 </style>

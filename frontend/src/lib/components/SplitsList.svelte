@@ -27,6 +27,7 @@
       splitTimeMs={$splitTimesMs[i] || 0}
       comparisonSplitMs={segment.comparisonSplitMs}
       personalBestMs={segment.personalBestMs}
+      bestSegmentMs={segment.bestSegmentMs}
       delta={i < currentDeltas.length ? currentDeltas[i] : null}
       isActive={i === $currentSegment}
       isCompleted={i < $currentSegment}
