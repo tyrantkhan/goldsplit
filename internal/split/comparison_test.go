@@ -186,3 +186,25 @@ func TestBestSegmentsFromIncompleteRuns(t *testing.T) {
 		t.Fatalf("expected best[2] 1500, got %d", best[2])
 	}
 }
+
+func TestComputeSplitDeltasEffectivelySkipped(t *testing.T) {
+	att := NewAttempts("a-1", "t-1", "", "Any%", []string{"A", "B", "C", "D"})
+	att.AddAttempt([]int64{1000, 2500, 4000, 5500}, true)
+
+	// Current run where segments B and C are effectively skipped (same cumulative as A).
+	deltas := ComputeSplitDeltas(att, []int64{1000, 1000, 1000, 2000}, "personal_best")
+
+	// Segments B and C should be marked as skipped.
+	if !deltas[1].Skipped {
+		t.Fatal("expected delta[1] to be skipped (effectively skipped)")
+	}
+
+	if !deltas[2].Skipped {
+		t.Fatal("expected delta[2] to be skipped (effectively skipped)")
+	}
+
+	// Segment D should not be skipped (2000-1000 = 1000 > 0).
+	if deltas[3].Skipped {
+		t.Fatal("expected delta[3] to not be skipped")
+	}
+}

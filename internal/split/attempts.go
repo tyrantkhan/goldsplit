@@ -94,6 +94,18 @@ func (a *Attempts) PersonalBestSplits() []int64 {
 		}
 	}
 
+	// Normalize effectively-skipped segments: if a cumulative equals the
+	// previous non-zero cumulative, the segment was collapsed/skipped.
+	for i := 1; i < len(bestSplits); i++ {
+		if bestSplits[i] == 0 {
+			continue
+		}
+
+		if prev, ok := lastNonZeroBefore(bestSplits, i); ok && bestSplits[i] == prev {
+			bestSplits[i] = 0
+		}
+	}
+
 	return bestSplits
 }
 
@@ -114,6 +126,10 @@ func (a *Attempts) BestSegments() []int64 {
 			} else if prev, ok := lastNonZeroBefore(att.SplitTimesMS, i); ok {
 				segTime = splitMS - prev
 			} else {
+				continue
+			}
+
+			if segTime <= 0 {
 				continue
 			}
 

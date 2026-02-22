@@ -61,6 +61,13 @@ func ComputeSplitDeltas(att *Attempts, currentSplitsMS []int64, comparison strin
 			segTimeMS = splitMS - prevSplit
 		}
 
+		if segTimeMS <= 0 {
+			d.Skipped = true
+			deltas[i] = d
+
+			continue
+		}
+
 		// Check if this is the best segment ever.
 		if i < len(bestSegs) && bestSegs[i] > 0 {
 			d.IsBestEver = segTimeMS < bestSegs[i]

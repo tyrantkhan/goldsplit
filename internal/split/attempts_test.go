@@ -309,6 +309,74 @@ func TestEditAttemptSplitsRejectsNonMonotonic(t *testing.T) {
 	}
 }
 
+func TestBestSegmentsIgnoresEffectivelySkipped(t *testing.T) {
+	att := NewAttempts("a-1", "t-1", "", "Any%", []string{"A", "B", "C", "D", "E"})
+
+	// Attempt where segments B-D have the same cumulative as A (effectively skipped).
+	att.AddAttempt([]int64{1000, 1000, 1000, 1000, 2000}, true)
+
+	best := att.BestSegments()
+
+	// Seg A: 1000, Seg B-D: 0 (no data), Seg E: 1000 (2000-1000).
+	if best[0] != 1000 {
+		t.Fatalf("expected best[0] 1000, got %d", best[0])
+	}
+
+	for i := 1; i <= 3; i++ {
+		if best[i] != 0 {
+			t.Fatalf("expected best[%d] 0 (effectively skipped), got %d", i, best[i])
+		}
+	}
+
+	if best[4] != 1000 {
+		t.Fatalf("expected best[4] 1000, got %d", best[4])
+	}
+}
+
+func TestBestSegmentsNotCorruptedByEffectivelySkipped(t *testing.T) {
+	att := NewAttempts("a-1", "t-1", "", "Any%", []string{"A", "B", "C"})
+
+	// Attempt 1: segments B effectively skipped (same cumulative as A).
+	att.AddAttempt([]int64{1000, 1000, 2000}, true)
+
+	// Attempt 2: real segment B time of 500ms.
+	att.AddAttempt([]int64{1000, 1500, 2500}, true)
+
+	best := att.BestSegments()
+
+	// Seg B should be 500 from attempt 2, not 0 from attempt 1.
+	if best[1] != 500 {
+		t.Fatalf("expected best[1] 500 from real attempt, got %d", best[1])
+	}
+}
+
+func TestPersonalBestSplitsNormalizesEffectivelySkipped(t *testing.T) {
+	att := NewAttempts("a-1", "t-1", "", "Any%", []string{"A", "B", "C", "D", "E"})
+
+	// PB attempt where segments B-D are effectively skipped.
+	att.AddAttempt([]int64{1000, 1000, 1000, 1000, 2000}, true)
+
+	pb := att.PersonalBestSplits()
+	if pb == nil {
+		t.Fatal("expected non-nil PB")
+	}
+
+	if pb[0] != 1000 {
+		t.Fatalf("expected pb[0] 1000, got %d", pb[0])
+	}
+
+	// Segments B-D should be normalized to 0 (skipped).
+	for i := 1; i <= 3; i++ {
+		if pb[i] != 0 {
+			t.Fatalf("expected pb[%d] 0 (normalized), got %d", i, pb[i])
+		}
+	}
+
+	if pb[4] != 2000 {
+		t.Fatalf("expected pb[4] 2000, got %d", pb[4])
+	}
+}
+
 func TestEditAttemptSplitsAcceptsSkips(t *testing.T) {
 	att := NewAttempts("a-1", "t-1", "", "Any%", []string{"A", "B", "C"})
 	att.AddAttempt([]int64{1000, 2000, 3000}, true)
