@@ -47,6 +47,7 @@ jobs:
       - run: cd frontend && npm ci && npm run check
 
   build:
+    if: github.event_name == 'pull_request'
     name: Build (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     strategy:
