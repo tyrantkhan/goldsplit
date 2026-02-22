@@ -1,11 +1,12 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { ListTemplates, LoadTemplate, DeleteTemplate } from '../../../wailsjs/go/main/App';
+  import { ListTemplates, LoadTemplate, DeleteTemplate, ConfirmDialog } from '../../../wailsjs/go/main/App';
   import { setTemplate, viewMode, openSettings, openAbout } from '../stores/splits';
   import TopNav from './TopNav.svelte';
   import IconInfo from '../icons/IconInfo.svelte';
   import IconSettings from '../icons/IconSettings.svelte';
   import IconPlus from '../icons/IconPlus.svelte';
+  import IconTrash from '../icons/IconTrash.svelte';
   import type { TemplateSummary, TemplateData } from '../types';
 
   let templates: TemplateSummary[] = $state([]);
@@ -28,6 +29,7 @@
 
   async function handleDelete(e: Event, id: string) {
     e.stopPropagation();
+    if (!await ConfirmDialog('Delete Game', 'Delete this game and all its attempts?')) return;
     await DeleteTemplate(id);
     await refreshList();
   }
@@ -65,7 +67,7 @@
               <span class="meta-text">{tmpl.segmentCount} segments</span>
             </div>
             <div class="item-actions">
-              <button class="delete-btn" onclick={(e) => handleDelete(e, tmpl.id)}>x</button>
+              <button class="delete-btn" onclick={(e) => handleDelete(e, tmpl.id)}><IconTrash /></button>
             </div>
           </div>
         {/each}
@@ -171,8 +173,7 @@
     width: 22px;
     height: 22px;
     border-radius: 4px;
-    font-size: 12px;
-    color: var(--text-muted);
+    color: var(--red);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -180,6 +181,5 @@
 
   .delete-btn:hover {
     background: rgba(255, 69, 58, 0.2);
-    color: var(--red);
   }
 </style>
