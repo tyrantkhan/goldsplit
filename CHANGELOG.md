@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.0.7](https://github.com/tyrantkhan/goldsplit/compare/v0.0.6...v0.0.7) (2026-02-22)
+
+
+### Bug Fixes
+
+* handle effectively-skipped segments with same cumulative time ([24a72b4](https://github.com/tyrantkhan/goldsplit/commit/24a72b437e3729f9ad2ee2f7e8928d11614a1b0c))
+
 ## [0.0.6](https://github.com/tyrantkhan/goldsplit/compare/v0.0.5...v0.0.6) (2026-02-22)
 
 
