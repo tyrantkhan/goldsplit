@@ -41,6 +41,28 @@ export function formatDelta(ms: number): string {
   return `${sign}${seconds}.${csStr}`;
 }
 
+/** Compact segment delta: -33s, +1m36s, -1h02m */
+export function formatSegDelta(ms: number): string {
+  const sign = ms < 0 ? '-' : '+';
+  const abs = Math.abs(ms);
+
+  const totalSeconds = Math.floor(abs / 1000);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  if (hours > 0) {
+    const minStr = String(minutes).padStart(2, '0');
+    return `${sign}${hours}h${minStr}m`;
+  }
+
+  if (minutes > 0) {
+    return `${sign}${minutes}m${String(seconds).padStart(2, '0')}s`;
+  }
+
+  return `${sign}${seconds}s`;
+}
+
 export function formatSplitTime(ms: number): string {
   if (ms === 0) return '-';
   return formatTime(ms);

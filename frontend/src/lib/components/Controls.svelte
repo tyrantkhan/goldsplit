@@ -143,7 +143,7 @@
         <Tooltip.Trigger>
           {#snippet child({ props })}
             <button {...props} class="btn danger" onclick={() => Reset()}>
-              Reset
+              Fail
             </button>
           {/snippet}
         </Tooltip.Trigger>

@@ -32,7 +32,7 @@ func main() {
 		AssetServer: &assetserver.Options{
 			Assets: assets,
 		},
-		BackgroundColour: &options.RGBA{R: 18, G: 18, B: 24, A: 1},
+		BackgroundColour: &options.RGBA{R: 18, G: 18, B: 24, A: 255},
 		Mac: &mac.Options{
 			About: &mac.AboutInfo{
 				Title:   "Goldsplit",

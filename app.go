@@ -200,9 +200,7 @@ func (a *App) emitDeltas() {
 
 func (a *App) checkRunCompletion() {
 	if a.engine.CurrentState() == timer.Finished {
-		splits := a.engine.SplitTimesMS()
-		completed := len(splits) > 0 && splits[len(splits)-1] > 0
-		a.saveAttempt(completed)
+		a.saveAttempt(true)
 	}
 }
 
