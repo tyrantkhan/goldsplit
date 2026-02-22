@@ -30,6 +30,10 @@ export function EditAttemptSplits(arg1, arg2, arg3) {
   return window['go']['main']['App']['EditAttemptSplits'](arg1, arg2, arg3);
 }
 
+export function GetAppInfo() {
+  return window['go']['main']['App']['GetAppInfo']();
+}
+
 export function GetAttemptHistory(arg1) {
   return window['go']['main']['App']['GetAttemptHistory'](arg1);
 }

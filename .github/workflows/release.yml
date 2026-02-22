@@ -36,20 +36,20 @@ jobs:
       - name: Install Wails CLI
         run: go install github.com/wailsapp/wails/v2/cmd/wails@latest
       - name: Build
-        run: wails build ${{ runner.os == 'Linux' && '-tags webkit2_41' || '' }}
+        run: wails build ${{ runner.os == 'Linux' && '-tags webkit2_41' || '' }} -ldflags "-X main.versionSuffix="
 
       - name: Package (macOS)
         if: runner.os == 'macOS'
-        run: cd build/bin && zip -r ../../${{ matrix.artifact }} goldsplit.app
+        run: cd build/bin && zip -r ../../${{ matrix.artifact }} Goldsplit.app
 
       - name: Package (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
-        run: Compress-Archive -Path build\bin\goldsplit.exe -DestinationPath ${{ matrix.artifact }}
+        run: Compress-Archive -Path build\bin\Goldsplit.exe -DestinationPath ${{ matrix.artifact }}
 
       - name: Package (Linux)
         if: runner.os == 'Linux'
-        run: tar -czf ${{ matrix.artifact }} -C build/bin goldsplit
+        run: mv build/bin/Goldsplit build/bin/goldsplit && tar -czf ${{ matrix.artifact }} -C build/bin goldsplit
 
       - uses: actions/upload-artifact@v4
         with:

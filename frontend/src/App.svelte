@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { initTimerEvents, timerState } from './lib/stores/timer';
-  import { initSplitEvents, viewMode, currentTemplate, currentAttempts, backToTemplateDetail, openSettings } from './lib/stores/splits';
+  import { initSplitEvents, viewMode, currentTemplate, currentAttempts, backToTemplateDetail, openSettings, openAbout } from './lib/stores/splits';
   import { initSettings } from './lib/stores/settings';
   import { deltas } from './lib/stores/splits';
   import { EventsOn } from '../wailsjs/runtime/runtime';
@@ -17,6 +17,7 @@
   import AttemptsSetup from './lib/components/AttemptsSetup.svelte';
   import AttemptEditor from './lib/components/AttemptEditor.svelte';
   import Settings from './lib/components/Settings.svelte';
+  import About from './lib/components/About.svelte';
 
   onMount(() => {
     initTimerEvents();
@@ -81,6 +82,8 @@
     <AttemptEditor attemptsId={$currentAttempts.id} categoryName={$currentAttempts.categoryName} segmentNames={$currentAttempts.segments.map(s => s.name)} />
   {:else if $viewMode === 'settings'}
     <Settings />
+  {:else if $viewMode === 'about'}
+    <About />
   {:else}
     <TemplateList />
   {/if}

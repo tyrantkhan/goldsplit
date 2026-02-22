@@ -1,8 +1,9 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { ListTemplates, LoadTemplate, DeleteTemplate } from '../../../wailsjs/go/main/App';
-  import { setTemplate, viewMode, openSettings } from '../stores/splits';
+  import { setTemplate, viewMode, openSettings, openAbout } from '../stores/splits';
   import TopNav from './TopNav.svelte';
+  import IconInfo from '../icons/IconInfo.svelte';
   import IconSettings from '../icons/IconSettings.svelte';
   import IconPlus from '../icons/IconPlus.svelte';
   import type { TemplateSummary, TemplateData } from '../types';
@@ -38,6 +39,9 @@
 
 <div class="page">
   <TopNav title="Games">
+    <button class="icon-btn" onclick={openAbout} title="About">
+      <IconInfo />
+    </button>
     <button class="icon-btn" onclick={openSettings} title="Settings">
       <IconSettings />
     </button>
