@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.0.9](https://github.com/tyrantkhan/goldsplit/compare/v0.0.8...v0.0.9) (2026-02-22)
+
+
+### Bug Fixes
+
+* PB fallback for comparison gaps, first-time segment marker ([d1e02df](https://github.com/tyrantkhan/goldsplit/commit/d1e02dfc0c4cd5bb21da23d127bee88708c263a2))
+
 ## [0.0.8](https://github.com/tyrantkhan/goldsplit/compare/v0.0.7...v0.0.8) (2026-02-22)
 
 
