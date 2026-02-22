@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.0.10](https://github.com/tyrantkhan/goldsplit/compare/v0.0.9...v0.0.10) (2026-02-22)
+
+
+### Features
+
+* suspend and resume in-progress runs ([1f03dbc](https://github.com/tyrantkhan/goldsplit/commit/1f03dbc544668269c5f2ac2f1b75e245f038eca0))
+* suspend/resume runs, editor fixes, SoB improvements ([350ff65](https://github.com/tyrantkhan/goldsplit/commit/350ff65af2520a2d3713bf009cd1a35485a875dd))
+
+
+### Bug Fixes
+
+* edit incomplete runs and sticky header in attempt editor ([2d92ac6](https://github.com/tyrantkhan/goldsplit/commit/2d92ac6aa67c1ed60aa51da68b8cc391eae1dc7d))
+* Sum of Best uses current run segments to fill gaps ([b730b41](https://github.com/tyrantkhan/goldsplit/commit/b730b416abb741d092312b75f5115714ddfaa994))
+
+
+### Refactoring
+
+* trash icon and confirm dialogs for delete actions ([415a2e2](https://github.com/tyrantkhan/goldsplit/commit/415a2e2028fc0dd5837b20f3f252cb4b83679d92))
+
 ## [0.0.9](https://github.com/tyrantkhan/goldsplit/compare/v0.0.8...v0.0.9) (2026-02-22)
 
 
