@@ -18,8 +18,25 @@ jobs:
       - id: rp
         uses: googleapis/release-please-action@v4
 
+  frontend-build:
+    name: Build Frontend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: cd frontend && npm ci && npm run build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist
+
   build:
     name: Build (${{ matrix.os }})
+    needs: [frontend-build]
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -35,11 +52,10 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version: "1.25"
-      - uses: actions/setup-node@v4
+      - uses: actions/download-artifact@v4
         with:
-          node-version: "20"
-          cache: npm
-          cache-dependency-path: frontend/package-lock.json
+          name: frontend-dist
+          path: frontend/dist
       - name: Cache & install Linux deps
         if: runner.os == 'Linux'
         uses: awalsh128/cache-apt-pkgs-action@v1
@@ -55,7 +71,7 @@ jobs:
         if: steps.cache-wails.outputs.cache-hit != 'true'
         run: go install github.com/wailsapp/wails/v2/cmd/wails@v2.11.0
       - name: Build
-        run: wails build ${{ runner.os == 'Linux' && '-tags webkit2_41' || '' }} -ldflags "-X main.versionSuffix="
+        run: wails build -s ${{ runner.os == 'Linux' && '-tags webkit2_41' || '' }} -ldflags "-X main.versionSuffix="
 
       - name: Package (macOS)
         if: runner.os == 'macOS'
@@ -88,6 +104,7 @@ jobs:
           fetch-depth: 0
       - uses: actions/download-artifact@v4
         with:
+          pattern: goldsplit-*
           path: artifacts
           merge-multiple: true
       - name: Upload binaries to versioned release
@@ -124,6 +141,7 @@ jobs:
           fetch-depth: 0
       - uses: actions/download-artifact@v4
         with:
+          pattern: goldsplit-*
           path: artifacts
           merge-multiple: true
       - name: Generate contributor list

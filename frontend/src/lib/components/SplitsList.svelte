@@ -25,6 +25,7 @@
     <SplitRow
       name={segment.name}
       splitTimeMs={$splitTimesMs[i] || 0}
+      comparisonSplitMs={segment.comparisonSplitMs}
       personalBestMs={segment.personalBestMs}
       delta={i < currentDeltas.length ? currentDeltas[i] : null}
       isActive={i === $currentSegment}

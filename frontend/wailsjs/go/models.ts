@@ -27,7 +27,7 @@ export namespace persist {
 	    aheadLosing: string;
 	    behindGaining: string;
 	    behindLosing: string;
-	    bestSegment: string;
+	    bestTime: string;
 	
 	    static createFrom(source: any = {}) {
 	        return new ColorSettings(source);
@@ -39,7 +39,7 @@ export namespace persist {
 	        this.aheadLosing = source["aheadLosing"];
 	        this.behindGaining = source["behindGaining"];
 	        this.behindLosing = source["behindLosing"];
-	        this.bestSegment = source["bestSegment"];
+	        this.bestTime = source["bestTime"];
 	    }
 	}
 	export class HotkeyBindings {

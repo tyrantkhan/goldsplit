@@ -130,13 +130,19 @@ func TestAttemptsBestSegmentsCumulative(t *testing.T) {
 }
 
 func TestAttemptsBestSegmentsCumulativePartial(t *testing.T) {
-	att := NewAttempts("a-1", "t-1", "", "Any%", []string{"A", "B"})
+	att := NewAttempts("a-1", "t-1", "", "Any%", []string{"A", "B", "C"})
 
-	// Incomplete run only covers segment A.
-	att.AddAttempt([]int64{500}, false)
+	// Incomplete run only covers segments A and B.
+	att.AddAttempt([]int64{500, 1200}, false)
 
-	if att.BestSegmentsCumulative() != nil {
-		t.Fatal("expected nil when a segment has no best")
+	cum := att.BestSegmentsCumulative()
+	if cum == nil {
+		t.Fatal("expected non-nil partial cumulative")
+	}
+
+	// Segments A and B have data, C does not.
+	if cum[0] != 500 || cum[1] != 1200 || cum[2] != 0 {
+		t.Fatalf("expected [500, 1200, 0], got %v", cum)
 	}
 }
 

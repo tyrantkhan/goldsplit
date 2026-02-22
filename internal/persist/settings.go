@@ -13,7 +13,7 @@ type ColorSettings struct {
 	AheadLosing   string `json:"aheadLosing"`
 	BehindGaining string `json:"behindGaining"`
 	BehindLosing  string `json:"behindLosing"`
-	BestSegment   string `json:"bestSegment"`
+	BestTime      string `json:"bestTime"`
 }
 
 // Settings holds the application settings.
@@ -51,7 +51,7 @@ func DefaultSettings() Settings {
 			AheadLosing:   "#7ec890",
 			BehindGaining: "#cc6b65",
 			BehindLosing:  "#ff453a",
-			BestSegment:   "#ffd60a",
+			BestTime:      "#ffd60a",
 		},
 	}
 }

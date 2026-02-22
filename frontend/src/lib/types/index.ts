@@ -13,6 +13,7 @@ export interface Segment {
   name: string;
   personalBestMs: number;
   bestSegmentMs: number;
+  comparisonSplitMs: number;
 }
 
 export interface TemplateData {
@@ -77,7 +78,7 @@ export interface ColorSettings {
   aheadLosing: string;
   behindGaining: string;
   behindLosing: string;
-  bestSegment: string;
+  bestTime: string;
 }
 
 export interface Settings {

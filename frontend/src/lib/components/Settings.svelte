@@ -39,7 +39,7 @@
 
   const comparisonOptions = [
     { value: 'personal_best', label: 'Personal Best' },
-    { value: 'best_segments', label: 'Best Segments' },
+    { value: 'best_segments', label: 'Best Times' },
     { value: 'average_segments', label: 'Average Segments' },
     { value: 'latest_run', label: 'Latest Run' },
   ];
@@ -79,7 +79,7 @@
     { key: 'aheadLosing', label: 'Ahead & Losing' },
     { key: 'behindGaining', label: 'Behind & Gaining' },
     { key: 'behindLosing', label: 'Behind & Losing' },
-    { key: 'bestSegment', label: 'Best Segment' },
+    { key: 'bestTime', label: 'Best Time' },
   ];
 
   const defaultColors: ColorSettings = {
@@ -87,7 +87,7 @@
     aheadLosing: '#7ec890',
     behindGaining: '#cc6b65',
     behindLosing: '#ff453a',
-    bestSegment: '#ffd60a',
+    bestTime: '#ffd60a',
   };
 
   async function updateColor(key: keyof ColorSettings, value: string) {

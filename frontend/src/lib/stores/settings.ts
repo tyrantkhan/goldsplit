@@ -18,7 +18,7 @@ const defaultSettings: Settings = {
     aheadLosing: '#7ec890',
     behindGaining: '#cc6b65',
     behindLosing: '#ff453a',
-    bestSegment: '#ffd60a',
+    bestTime: '#ffd60a',
   },
 };
 
@@ -30,7 +30,7 @@ function applyColorVars(colors: ColorSettings) {
   s.setProperty('--ahead-losing', colors.aheadLosing);
   s.setProperty('--behind-gaining', colors.behindGaining);
   s.setProperty('--behind-losing', colors.behindLosing);
-  s.setProperty('--best-segment', colors.bestSegment);
+  s.setProperty('--best-time', colors.bestTime);
 }
 
 export async function initSettings() {
