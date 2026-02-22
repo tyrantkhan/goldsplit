@@ -279,6 +279,75 @@ func TestSetSegments(t *testing.T) {
 	e.Reset()
 }
 
+func TestRestoreSetssPausedWithCorrectElapsed(t *testing.T) {
+	e := New(segments(), nil, nil)
+
+	splits := []int64{1000, 3000}
+	segs := []int64{1000, 2000}
+	e.Restore(5000, 2, splits, segs)
+
+	if e.CurrentState() != Paused {
+		t.Fatalf("expected Paused, got %v", e.CurrentState())
+	}
+
+	elapsed := e.ElapsedMS()
+	if elapsed < 4900 || elapsed > 5100 {
+		t.Fatalf("expected ~5000ms elapsed, got %d", elapsed)
+	}
+
+	if e.CurrentSegment() != 2 {
+		t.Fatalf("expected segment 2, got %d", e.CurrentSegment())
+	}
+
+	gotSplits := e.SplitTimesMS()
+	if len(gotSplits) != 2 || gotSplits[0] != 1000 || gotSplits[1] != 3000 {
+		t.Fatalf("unexpected splits: %v", gotSplits)
+	}
+
+	gotSegs := e.SegmentTimesMS()
+	if len(gotSegs) != 2 || gotSegs[0] != 1000 || gotSegs[1] != 2000 {
+		t.Fatalf("unexpected segments: %v", gotSegs)
+	}
+
+	e.Reset()
+}
+
+func TestRestoreOnlyFromIdle(t *testing.T) {
+	e := New(segments(), nil, nil)
+	e.Start()
+
+	// Restore should be a no-op when not Idle.
+	e.Restore(5000, 2, []int64{1000, 3000}, []int64{1000, 2000})
+
+	if e.CurrentState() != Running {
+		t.Fatalf("expected Running, got %v", e.CurrentState())
+	}
+
+	e.Reset()
+}
+
+func TestRestoreThenResumeElapsedIncreases(t *testing.T) {
+	e := New(segments(), nil, nil)
+
+	e.Restore(5000, 1, []int64{1000}, []int64{1000})
+
+	pausedElapsed := e.ElapsedMS()
+
+	e.Resume()
+
+	if e.CurrentState() != Running {
+		t.Fatalf("expected Running after resume, got %v", e.CurrentState())
+	}
+
+	time.Sleep(50 * time.Millisecond)
+
+	if e.ElapsedMS() <= pausedElapsed {
+		t.Fatal("elapsed should have increased after resume")
+	}
+
+	e.Reset()
+}
+
 func TestSetSegmentsWhileRunning(t *testing.T) {
 	e := New(segments(), nil, nil)
 	e.Start()

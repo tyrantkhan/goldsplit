@@ -1,22 +1,24 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { ListAttemptsForTemplate, LoadAttempts, DeleteAttempts, UpdateTemplate } from '../../../wailsjs/go/main/App';
-  import { currentTemplate, setAttempts, backToTemplates, viewMode, openSettings } from '../stores/splits';
+  import { ListAttemptsForTemplate, LoadAttempts, DeleteAttempts, UpdateTemplate, CheckSuspendedRun, ResumeSuspendedRun, DiscardSuspendedRun, ConfirmDialog } from '../../../wailsjs/go/main/App';
+  import { currentTemplate, setTemplate, setAttempts, backToTemplates, viewMode, openSettings } from '../stores/splits';
   import TopNav from './TopNav.svelte';
   import IconSettings from '../icons/IconSettings.svelte';
   import IconEdit from '../icons/IconEdit.svelte';
   import IconPlus from '../icons/IconPlus.svelte';
-  import type { AttemptsSummary, AttemptsData, TemplateData } from '../types';
+  import IconTrash from '../icons/IconTrash.svelte';
+  import type { AttemptsSummary, AttemptsData, TemplateData, SuspendedRunInfo } from '../types';
 
   let categories: AttemptsSummary[] = $state([]);
   let editing = $state(false);
   let editName = $state('');
   let editSegments = $state('');
+  let suspendedRun: SuspendedRunInfo | null = $state(null);
 
   const templateId = $derived($currentTemplate?.id || '');
 
   onMount(async () => {
-    await refreshList();
+    await Promise.all([refreshList(), checkSuspended()]);
   });
 
   async function refreshList() {
@@ -25,16 +27,38 @@
     categories.sort((a, b) => b.updatedAt - a.updatedAt);
   }
 
-  async function handleLoad(id: string) {
+  async function checkSuspended() {
+    const info = await CheckSuspendedRun();
+    suspendedRun = info ? info as SuspendedRunInfo : null;
+  }
+
+  async function handleNew(id: string) {
+    if (suspendedRun) {
+      if (!await ConfirmDialog('Discard Suspended Run', 'A suspended run exists. Discard it and start a new run?')) return;
+      await DiscardSuspendedRun();
+      suspendedRun = null;
+    }
     const data = await LoadAttempts(id);
     if (data) {
       setAttempts(data as AttemptsData);
     }
   }
 
-  async function handleDelete(e: Event, id: string) {
-    e.stopPropagation();
+  async function handleResume() {
+    const result = await ResumeSuspendedRun();
+    if (result) {
+      setTemplate(result.template as TemplateData);
+      setAttempts(result.attempts as AttemptsData);
+    }
+  }
+
+  async function handleDelete(id: string) {
+    if (!await ConfirmDialog('Delete Category', 'Delete this category and all its attempts?')) return;
     await DeleteAttempts(id);
+    if (suspendedRun?.attemptsId === id) {
+      await DiscardSuspendedRun();
+      suspendedRun = null;
+    }
     await refreshList();
   }
 
@@ -101,7 +125,7 @@
       </button>
     </TopNav>
 
-    <div class="section-divider"><span>Attempts</span></div>
+    <div class="section-divider"><span>Categories</span></div>
 
     {#if categories.length === 0}
       <div class="empty">
@@ -111,13 +135,16 @@
     {:else}
       <div class="list">
         {#each categories as cat}
-          <div class="list-item" role="button" tabindex="0" onclick={() => handleLoad(cat.id)} onkeydown={(e) => e.key === 'Enter' && handleLoad(cat.id)}>
+          <div class="list-item" role="button" tabindex="0" onclick={() => handleNew(cat.id)} onkeydown={(e) => e.key === 'Enter' && handleNew(cat.id)}>
             <div class="info">
               <span class="name">{cat.name}</span>
               <span class="meta-text">{cat.categoryName} &middot; {cat.attemptCount} attempts</span>
             </div>
             <div class="actions">
-              <button class="delete-btn" onclick={(e) => handleDelete(e, cat.id)}>x</button>
+              {#if suspendedRun?.attemptsId === cat.id}
+                <button class="resume-btn" onclick={(e) => { e.stopPropagation(); handleResume(); }}>Resume</button>
+              {/if}
+              <button class="delete-btn" onclick={(e) => { e.stopPropagation(); handleDelete(cat.id); }}><IconTrash /></button>
             </div>
           </div>
         {/each}
@@ -317,12 +344,24 @@
     gap: 8px;
   }
 
+  .resume-btn {
+    padding: 3px 10px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    background: var(--accent);
+    color: white;
+  }
+
+  .resume-btn:hover {
+    background: var(--accent-hover);
+  }
+
   .delete-btn {
     width: 22px;
     height: 22px;
     border-radius: 4px;
-    font-size: 12px;
-    color: var(--text-muted);
+    color: var(--red);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -330,6 +369,5 @@
 
   .delete-btn:hover {
     background: rgba(255, 69, 58, 0.2);
-    color: var(--red);
   }
 </style>
