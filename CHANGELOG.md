@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.0.5](https://github.com/tyrantkhan/goldsplit/compare/v0.0.4...v0.0.5) (2026-02-22)
+
+
+### Bug Fixes
+
+* rename VERSION to version.txt so release-please updates it ([cedeaa3](https://github.com/tyrantkhan/goldsplit/commit/cedeaa3807aa6a21dc2f644bec147f41c7cf1d1d))
+
 ## [0.0.4](https://github.com/tyrantkhan/goldsplit/compare/v0.0.3...v0.0.4) (2026-02-22)
 
 
