@@ -3,6 +3,10 @@
 import {split} from '../models';
 import {persist} from '../models';
 
+export function CheckSuspendedRun():Promise<Record<string, any>>;
+
+export function ConfirmDialog(arg1:string,arg2:string):Promise<boolean>;
+
 export function CreateAttempts(arg1:string,arg2:string,arg3:string):Promise<Record<string, any>>;
 
 export function CreateTemplate(arg1:string,arg2:Array<string>):Promise<Record<string, any>>;
@@ -14,6 +18,8 @@ export function DeleteSingleAttempt(arg1:string,arg2:number):Promise<Record<stri
 export function DeleteTemplate(arg1:string):Promise<boolean>;
 
 export function DiscardAttempt():Promise<void>;
+
+export function DiscardSuspendedRun():Promise<void>;
 
 export function EditAttemptSplits(arg1:string,arg2:number,arg3:Array<number>):Promise<Record<string, any>>;
 
@@ -39,9 +45,13 @@ export function LoadTemplate(arg1:string):Promise<Record<string, any>>;
 
 export function Reset():Promise<void>;
 
+export function ResumeSuspendedRun():Promise<Record<string, any>>;
+
 export function SkipSplit():Promise<void>;
 
 export function StartSplit():Promise<void>;
+
+export function SuspendRun():Promise<void>;
 
 export function TogglePause():Promise<void>;
 

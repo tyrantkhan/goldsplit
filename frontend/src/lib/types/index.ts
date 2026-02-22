@@ -63,6 +63,16 @@ export interface Delta {
   skipped: boolean;
 }
 
+export interface SuspendedRunInfo {
+  attemptsId: string;
+  templateName: string;
+  categoryName: string;
+  elapsedMs: number;
+  currentSegment: number;
+  totalSegments: number;
+  suspendedAt: number;
+}
+
 export type ViewMode = 'templates' | 'template_detail' | 'template_setup' | 'attempts_setup' | 'timer' | 'settings' | 'attempt_editor' | 'about';
 
 export interface HotkeyBindings {

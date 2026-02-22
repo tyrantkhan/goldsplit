@@ -32,10 +32,27 @@ func NewApp(version string) *App {
 }
 
 // GetAppInfo returns application metadata for the frontend.
+// GetAppInfo returns application metadata for the frontend.
 func (a *App) GetAppInfo() map[string]any {
 	return map[string]any{
 		"version": a.version,
 	}
+}
+
+// ConfirmDialog shows a native confirmation dialog and returns the user's choice.
+func (a *App) ConfirmDialog(title, message string) bool {
+	result, err := runtime.MessageDialog(a.ctx, runtime.MessageDialogOptions{
+		Type:          runtime.QuestionDialog,
+		Title:         title,
+		Message:       message,
+		Buttons:       []string{"Yes", "No"},
+		DefaultButton: "No",
+	})
+	if err != nil {
+		return false
+	}
+
+	return result == "Yes"
 }
 
 func (a *App) startup(ctx context.Context) {
@@ -79,6 +96,7 @@ func (a *App) shutdown(ctx context.Context) {
 	}
 
 	if a.engine != nil {
+		a.saveSuspendedRun()
 		a.engine.Reset()
 	}
 }
@@ -118,6 +136,10 @@ func (a *App) StartSplit() {
 		a.engine.Split()
 		a.emitDeltas()
 		a.checkRunCompletion()
+
+		if a.engine.CurrentState() != timer.Finished {
+			a.saveSuspendedRun()
+		}
 	case timer.Paused, timer.Finished:
 		// No-op for these states.
 	}
@@ -130,6 +152,7 @@ func (a *App) TogglePause() {
 	switch state {
 	case timer.Running:
 		a.engine.Pause()
+		a.saveSuspendedRun()
 	case timer.Paused:
 		a.engine.Resume()
 	case timer.Idle, timer.Finished:
@@ -151,6 +174,7 @@ func (a *App) Reset() {
 	}
 
 	a.engine.Reset()
+	a.deleteSuspendedRun()
 }
 
 // DiscardAttempt removes the last completed attempt, recalculates PB, and resets.
@@ -173,12 +197,14 @@ func (a *App) DiscardAttempt() {
 	}
 
 	a.engine.Reset()
+	a.deleteSuspendedRun()
 }
 
 // UndoSplit undoes the last split.
 func (a *App) UndoSplit() {
 	a.engine.UndoSplit()
 	a.emitDeltas()
+	a.saveSuspendedRun()
 }
 
 // SkipSplit skips the current segment.
@@ -186,6 +212,10 @@ func (a *App) SkipSplit() {
 	a.engine.SkipSplit()
 	a.emitDeltas()
 	a.checkRunCompletion()
+
+	if a.engine.CurrentState() != timer.Finished {
+		a.saveSuspendedRun()
+	}
 }
 
 func (a *App) emitDeltas() {
@@ -200,6 +230,7 @@ func (a *App) emitDeltas() {
 func (a *App) checkRunCompletion() {
 	if a.engine.CurrentState() == timer.Finished {
 		a.saveAttempt(true)
+		a.deleteSuspendedRun()
 	}
 }
 
@@ -550,6 +581,134 @@ func (a *App) UpdateSettings(settings persist.Settings) bool {
 	}
 
 	return true
+}
+
+func (a *App) saveSuspendedRun() {
+	if a.store == nil || a.tmpl == nil || a.attempts == nil {
+		return
+	}
+
+	state := a.engine.CurrentState()
+	if state != timer.Running && state != timer.Paused {
+		return
+	}
+
+	run := &persist.SuspendedRun{
+		TemplateID:     a.tmpl.ID,
+		AttemptsID:     a.attempts.ID,
+		ElapsedMS:      a.engine.ElapsedMS(),
+		CurrentSegment: a.engine.CurrentSegment(),
+		SplitTimesMS:   a.engine.SplitTimesMS(),
+		SegmentTimesMS: a.engine.SegmentTimesMS(),
+		SuspendedAt:    time.Now().Unix(),
+	}
+
+	if err := a.store.SaveSuspendedRun(run); err != nil {
+		fmt.Printf("Warning: could not save suspended run: %v\n", err)
+	}
+}
+
+func (a *App) deleteSuspendedRun() {
+	if a.store == nil {
+		return
+	}
+
+	if err := a.store.DeleteSuspendedRun(); err != nil {
+		fmt.Printf("Warning: could not delete suspended run: %v\n", err)
+	}
+}
+
+// CheckSuspendedRun returns info about a suspended run, or nil if none exists.
+// Cleans up the file if the referenced template or attempts no longer exist.
+func (a *App) CheckSuspendedRun() map[string]any {
+	if a.store == nil {
+		return nil
+	}
+
+	run, err := a.store.LoadSuspendedRun()
+	if err != nil {
+		fmt.Printf("Warning: could not load suspended run: %v\n", err)
+
+		return nil
+	}
+
+	if run == nil {
+		return nil
+	}
+
+	tmpl, err := a.store.LoadTemplate(run.TemplateID)
+	if err != nil {
+		_ = a.store.DeleteSuspendedRun()
+
+		return nil
+	}
+
+	att, err := a.store.LoadAttempts(run.AttemptsID)
+	if err != nil {
+		_ = a.store.DeleteSuspendedRun()
+
+		return nil
+	}
+
+	return map[string]any{
+		"attemptsId":     run.AttemptsID,
+		"templateName":   tmpl.Name,
+		"categoryName":   att.CategoryName,
+		"elapsedMs":      run.ElapsedMS,
+		"currentSegment": run.CurrentSegment,
+		"totalSegments":  len(tmpl.SegmentNames),
+		"suspendedAt":    run.SuspendedAt,
+	}
+}
+
+// ResumeSuspendedRun loads a suspended run, restores the engine, and returns template + attempts data.
+func (a *App) ResumeSuspendedRun() map[string]any {
+	if a.store == nil {
+		return nil
+	}
+
+	run, err := a.store.LoadSuspendedRun()
+	if err != nil || run == nil {
+		return nil
+	}
+
+	tmpl, err := a.store.LoadTemplate(run.TemplateID)
+	if err != nil {
+		return nil
+	}
+
+	att, err := a.store.LoadAttempts(run.AttemptsID)
+	if err != nil {
+		return nil
+	}
+
+	a.tmpl = tmpl
+	a.attempts = att
+	a.engine.SetSegments(att.SegmentNames())
+	a.engine.Restore(run.ElapsedMS, run.CurrentSegment, run.SplitTimesMS, run.SegmentTimesMS)
+	a.emitDeltas()
+
+	return map[string]any{
+		"template": a.getTemplateData(),
+		"attempts": a.getAttemptsData(),
+	}
+}
+
+// SuspendRun explicitly suspends the current run and resets the engine.
+// Only valid from Running or Paused state.
+func (a *App) SuspendRun() {
+	state := a.engine.CurrentState()
+	if state != timer.Running && state != timer.Paused {
+		return
+	}
+
+	a.saveSuspendedRun()
+	a.engine.Reset()
+}
+
+// DiscardSuspendedRun deletes the suspended run file.
+func (a *App) DiscardSuspendedRun() {
+	a.deleteSuspendedRun()
 }
 
 func (a *App) getTemplateData() map[string]any {

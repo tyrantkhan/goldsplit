@@ -3,7 +3,8 @@
   import { timerState } from '../stores/timer';
   import { settings } from '../stores/settings';
   import { deltas } from '../stores/splits';
-  import { StartSplit, TogglePause, Reset, UndoSplit, SkipSplit, DiscardAttempt, GetDeltas } from '../../../wailsjs/go/main/App';
+  import { StartSplit, TogglePause, Reset, UndoSplit, SkipSplit, DiscardAttempt, GetDeltas, SuspendRun } from '../../../wailsjs/go/main/App';
+  import { backToTemplateDetail } from '../stores/splits';
 
   async function fetchDeltas() {
     const d = await GetDeltas();
@@ -22,6 +23,7 @@
   const showReset = $derived($timerState === 'running' || $timerState === 'paused');
   const showUndo = $derived($timerState === 'running');
   const showSkip = $derived($timerState === 'running');
+  const showSuspend = $derived($timerState === 'paused');
   const showFinished = $derived($timerState === 'finished');
 
   function displayKey(code: string): string {
@@ -151,6 +153,12 @@
           {displayKey($settings.hotkeys.reset)}
         </Tooltip.Content>
       </Tooltip.Root>
+    {/if}
+
+    {#if showSuspend}
+      <button class="btn" onclick={() => { SuspendRun(); backToTemplateDetail(); }}>
+        Suspend
+      </button>
     {/if}
 
     {#if showFinished}

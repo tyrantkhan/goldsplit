@@ -181,6 +181,7 @@ func (e *Engine) UndoSplit() {
 	e.splitTimesMS = e.splitTimesMS[:len(e.splitTimesMS)-1]
 	e.segmentTimesMS = e.segmentTimesMS[:len(e.segmentTimesMS)-1]
 	e.currentSegment--
+	e.notifyTick()
 }
 
 // Pause pauses the timer. Only valid from Running state.
@@ -210,6 +211,31 @@ func (e *Engine) Resume() {
 	e.pauseAccum += time.Since(e.pauseTime)
 	e.state = Running
 	e.startTicker()
+	e.notifyStateChange()
+}
+
+// Restore puts the engine into Paused state with previously saved data.
+// Only valid from Idle state. After restoring, the normal Resume transition works.
+func (e *Engine) Restore(elapsedMS int64, currentSegment int, splitTimesMS, segmentTimesMS []int64) {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+
+	if e.state != Idle {
+		return
+	}
+
+	now := time.Now()
+	e.state = Paused
+	e.startTime = now.Add(-time.Duration(elapsedMS) * time.Millisecond)
+	e.pauseTime = now
+	e.pauseAccum = 0
+	e.currentSegment = currentSegment
+	e.splitTimesMS = make([]int64, len(splitTimesMS))
+	copy(e.splitTimesMS, splitTimesMS)
+	e.segmentTimesMS = make([]int64, len(segmentTimesMS))
+	copy(e.segmentTimesMS, segmentTimesMS)
+
+	e.notifyTick()
 	e.notifyStateChange()
 }
 
