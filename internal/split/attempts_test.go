@@ -163,8 +163,8 @@ func TestAttemptsAverageSplits(t *testing.T) {
 func TestAttemptsAverageSplitsIncludesIncomplete(t *testing.T) {
 	att := NewAttempts("a-1", "t-1", "", "Any%", []string{"A", "B"})
 
-	att.AddAttempt([]int64{500}, false)          // incomplete, only seg A
-	att.AddAttempt([]int64{1000, 2000}, true)     // complete
+	att.AddAttempt([]int64{500}, false)       // incomplete, only seg A
+	att.AddAttempt([]int64{1000, 2000}, true) // complete
 
 	avg := att.AverageSplits()
 	if avg == nil {
@@ -180,7 +180,7 @@ func TestAttemptsAverageSplitsIncludesIncomplete(t *testing.T) {
 func TestAttemptsAverageSplitsSkipsZeros(t *testing.T) {
 	att := NewAttempts("a-1", "t-1", "", "Any%", []string{"A", "B"})
 
-	att.AddAttempt([]int64{600, 0}, true)          // seg B skipped
+	att.AddAttempt([]int64{600, 0}, true) // seg B skipped
 	att.AddAttempt([]int64{1000, 2000}, true)
 
 	avg := att.AverageSplits()
