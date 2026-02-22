@@ -162,7 +162,6 @@ func (a *App) DiscardAttempt() {
 	if a.attempts != nil && len(a.attempts.History) > 0 {
 		a.attempts.History = a.attempts.History[:len(a.attempts.History)-1]
 		a.attempts.AttemptCount--
-		split.RecalculatePersonalBest(a.attempts)
 
 		if a.store != nil {
 			if err := a.store.SaveAttempts(a.attempts); err != nil {
@@ -211,10 +210,6 @@ func (a *App) saveAttempt(completed bool) {
 
 	splits := a.engine.SplitTimesMS()
 	a.attempts.AddAttempt(splits, completed)
-
-	if completed {
-		split.UpdatePersonalBest(a.attempts, splits)
-	}
 
 	if err := a.store.SaveAttempts(a.attempts); err != nil {
 		fmt.Printf("Warning: could not save attempts: %v\n", err)
@@ -572,12 +567,25 @@ func (a *App) getAttemptsData() map[string]any {
 }
 
 func (a *App) buildAttemptsData(att *split.Attempts) map[string]any {
+	pbSplits := att.PersonalBestSplits()
+	bestSegs := att.BestSegments()
+
 	segments := make([]map[string]any, len(att.Segments))
 	for i, s := range att.Segments {
+		var pb int64
+		if pbSplits != nil && i < len(pbSplits) {
+			pb = pbSplits[i]
+		}
+
+		var bs int64
+		if i < len(bestSegs) {
+			bs = bestSegs[i]
+		}
+
 		segments[i] = map[string]any{
 			"name":           s.Name,
-			"personalBestMs": s.PersonalBestMS,
-			"bestSegmentMs":  s.BestSegmentMS,
+			"personalBestMs": pb,
+			"bestSegmentMs":  bs,
 		}
 	}
 

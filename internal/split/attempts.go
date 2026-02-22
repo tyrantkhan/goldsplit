@@ -4,9 +4,7 @@ import "time"
 
 // Segment represents a single segment in a run.
 type Segment struct {
-	Name           string `json:"name"`
-	PersonalBestMS int64  `json:"personalBestMs"` // Cumulative PB time.
-	BestSegmentMS  int64  `json:"bestSegmentMs"`  // Best individual segment time ever.
+	Name string `json:"name"`
 }
 
 // Attempt records a single attempt.
@@ -99,43 +97,65 @@ func (a *Attempts) PersonalBestSplits() []int64 {
 	return bestSplits
 }
 
+// BestSegments returns the best individual segment time for each segment across all attempts.
+// Includes incomplete runs. Returns a slice where 0 means no data for that segment.
+func (a *Attempts) BestSegments() []int64 {
+	best := make([]int64, len(a.Segments))
+
+	for _, att := range a.History {
+		for i, splitMS := range att.SplitTimesMS {
+			if splitMS == 0 || i >= len(a.Segments) {
+				continue
+			}
+
+			var segTime int64
+			if i == 0 {
+				segTime = splitMS
+			} else if prev, ok := lastNonZeroBefore(att.SplitTimesMS, i); ok {
+				segTime = splitMS - prev
+			} else {
+				continue
+			}
+
+			if best[i] == 0 || segTime < best[i] {
+				best[i] = segTime
+			}
+		}
+	}
+
+	return best
+}
+
 // BestSegmentsCumulative returns cumulative splits built from each segment's best time.
+// Computed from all history (including incomplete runs).
 // Returns nil if any segment has no best time recorded.
 func (a *Attempts) BestSegmentsCumulative() []int64 {
+	best := a.BestSegments()
 	cumulative := make([]int64, len(a.Segments))
 	var sum int64
 
-	for i, seg := range a.Segments {
-		if seg.BestSegmentMS == 0 {
+	for i, seg := range best {
+		if seg == 0 {
 			return nil
 		}
 
-		sum += seg.BestSegmentMS
+		sum += seg
 		cumulative[i] = sum
 	}
 
 	return cumulative
 }
 
-// AverageSplits returns the average cumulative split time at each segment across completed attempts.
-// Skips attempts with finalTime==0 and per-segment values of 0. Returns nil if no valid data.
+// AverageSplits returns the average cumulative split time at each segment across all attempts.
+// Includes incomplete runs for whatever segments they covered. Returns nil if no valid data.
 func (a *Attempts) AverageSplits() []int64 {
 	n := len(a.Segments)
 	sums := make([]int64, n)
 	counts := make([]int, n)
 
 	for _, att := range a.History {
-		if !att.Completed || len(att.SplitTimesMS) != n {
-			continue
-		}
-
-		finalTime := att.SplitTimesMS[n-1]
-		if finalTime == 0 {
-			continue
-		}
-
 		for i, t := range att.SplitTimesMS {
-			if t == 0 {
+			if t == 0 || i >= n {
 				continue
 			}
 
@@ -149,8 +169,6 @@ func (a *Attempts) AverageSplits() []int64 {
 
 	for i := range result {
 		if counts[i] == 0 {
-			result[i] = 0
-
 			continue
 		}
 
@@ -165,17 +183,12 @@ func (a *Attempts) AverageSplits() []int64 {
 	return result
 }
 
-// LatestCompletedSplits returns the splits from the most recent completed attempt.
-// Excludes attempts with finalTime==0. Returns nil if none.
-func (a *Attempts) LatestCompletedSplits() []int64 {
+// LatestRunSplits returns the splits from the most recent attempt (complete or incomplete).
+// Returns nil if no attempts exist.
+func (a *Attempts) LatestRunSplits() []int64 {
 	for i := len(a.History) - 1; i >= 0; i-- {
 		att := a.History[i]
-		if !att.Completed || len(att.SplitTimesMS) == 0 {
-			continue
-		}
-
-		finalTime := att.SplitTimesMS[len(att.SplitTimesMS)-1]
-		if finalTime == 0 {
+		if len(att.SplitTimesMS) == 0 {
 			continue
 		}
 
@@ -188,7 +201,7 @@ func (a *Attempts) LatestCompletedSplits() []int64 {
 	return nil
 }
 
-// DeleteAttempt removes an attempt by ID from History and recalculates PB data.
+// DeleteAttempt removes an attempt by ID from History.
 func (a *Attempts) DeleteAttempt(attemptID int) bool {
 	idx := -1
 	for i, att := range a.History {
@@ -206,12 +219,11 @@ func (a *Attempts) DeleteAttempt(attemptID int) bool {
 	a.History = append(a.History[:idx], a.History[idx+1:]...)
 	a.AttemptCount--
 	a.UpdatedAt = time.Now()
-	RecalculatePersonalBest(a)
 
 	return true
 }
 
-// EditAttemptSplits updates split times for an attempt and recalculates PB data.
+// EditAttemptSplits updates split times for an attempt.
 // Returns false if the attempt is not found, the segment count mismatches,
 // or cumulative times are not monotonically increasing (for non-zero values).
 func (a *Attempts) EditAttemptSplits(attemptID int, newSplits []int64) bool {
@@ -238,7 +250,6 @@ func (a *Attempts) EditAttemptSplits(attemptID int, newSplits []int64) bool {
 		if a.History[i].ID == attemptID {
 			a.History[i].SplitTimesMS = newSplits
 			a.UpdatedAt = time.Now()
-			RecalculatePersonalBest(a)
 
 			return true
 		}

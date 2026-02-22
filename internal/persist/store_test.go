@@ -222,7 +222,6 @@ func TestSaveUpdatesRoundTrip(t *testing.T) {
 	}
 
 	att.AddAttempt([]int64{1000, 2000}, true)
-	split.UpdatePersonalBest(att, []int64{1000, 2000})
 
 	if err := store.SaveAttempts(att); err != nil {
 		t.Fatalf("save updated failed: %v", err)
@@ -237,7 +236,8 @@ func TestSaveUpdatesRoundTrip(t *testing.T) {
 		t.Fatalf("expected 1 attempt, got %d", loaded.AttemptCount)
 	}
 
-	if loaded.Segments[0].PersonalBestMS != 1000 {
-		t.Fatalf("expected PB 1000, got %d", loaded.Segments[0].PersonalBestMS)
+	pb := loaded.PersonalBestSplits()
+	if pb == nil || pb[0] != 1000 {
+		t.Fatalf("expected PB 1000, got %v", pb)
 	}
 }

@@ -83,16 +83,41 @@ func TestAttemptsPersonalBestSplits(t *testing.T) {
 	}
 }
 
+func TestAttemptsBestSegments(t *testing.T) {
+	att := NewAttempts("a-1", "t-1", "", "Any%", []string{"A", "B", "C"})
+
+	best := att.BestSegments()
+	if best[0] != 0 || best[1] != 0 || best[2] != 0 {
+		t.Fatalf("expected all zeros with no attempts, got %v", best)
+	}
+
+	att.AddAttempt([]int64{1000, 2500, 4000}, true)
+
+	best = att.BestSegments()
+	if best[0] != 1000 || best[1] != 1500 || best[2] != 1500 {
+		t.Fatalf("expected [1000, 1500, 1500], got %v", best)
+	}
+
+	// Add a run with a gold split on segment B.
+	att.AddAttempt([]int64{1100, 2100, 4100}, true)
+
+	best = att.BestSegments()
+	// Seg A: min(1000, 1100) = 1000
+	// Seg B: min(1500, 1000) = 1000
+	// Seg C: min(1500, 2000) = 1500
+	if best[0] != 1000 || best[1] != 1000 || best[2] != 1500 {
+		t.Fatalf("expected [1000, 1000, 1500], got %v", best)
+	}
+}
+
 func TestAttemptsBestSegmentsCumulative(t *testing.T) {
 	att := NewAttempts("a-1", "t-1", "", "Any%", []string{"A", "B", "C"})
 
 	if att.BestSegmentsCumulative() != nil {
-		t.Fatal("expected nil with no best segments")
+		t.Fatal("expected nil with no attempts")
 	}
 
-	att.Segments[0].BestSegmentMS = 500
-	att.Segments[1].BestSegmentMS = 700
-	att.Segments[2].BestSegmentMS = 800
+	att.AddAttempt([]int64{500, 1200, 2000}, true)
 
 	cum := att.BestSegmentsCumulative()
 	if cum == nil {
@@ -106,7 +131,9 @@ func TestAttemptsBestSegmentsCumulative(t *testing.T) {
 
 func TestAttemptsBestSegmentsCumulativePartial(t *testing.T) {
 	att := NewAttempts("a-1", "t-1", "", "Any%", []string{"A", "B"})
-	att.Segments[0].BestSegmentMS = 500
+
+	// Incomplete run only covers segment A.
+	att.AddAttempt([]int64{500}, false)
 
 	if att.BestSegmentsCumulative() != nil {
 		t.Fatal("expected nil when a segment has no best")
@@ -133,11 +160,27 @@ func TestAttemptsAverageSplits(t *testing.T) {
 	}
 }
 
-func TestAttemptsAverageSplitsSkipsInvalid(t *testing.T) {
+func TestAttemptsAverageSplitsIncludesIncomplete(t *testing.T) {
 	att := NewAttempts("a-1", "t-1", "", "Any%", []string{"A", "B"})
 
-	att.AddAttempt([]int64{500}, false)
-	att.AddAttempt([]int64{600, 0}, true)
+	att.AddAttempt([]int64{500}, false)          // incomplete, only seg A
+	att.AddAttempt([]int64{1000, 2000}, true)     // complete
+
+	avg := att.AverageSplits()
+	if avg == nil {
+		t.Fatal("expected non-nil averages")
+	}
+
+	// Seg A: avg(500, 1000) = 750. Seg B: avg(2000) = 2000.
+	if avg[0] != 750 || avg[1] != 2000 {
+		t.Fatalf("expected [750, 2000], got %v", avg)
+	}
+}
+
+func TestAttemptsAverageSplitsSkipsZeros(t *testing.T) {
+	att := NewAttempts("a-1", "t-1", "", "Any%", []string{"A", "B"})
+
+	att.AddAttempt([]int64{600, 0}, true)          // seg B skipped
 	att.AddAttempt([]int64{1000, 2000}, true)
 
 	avg := att.AverageSplits()
@@ -145,22 +188,23 @@ func TestAttemptsAverageSplitsSkipsInvalid(t *testing.T) {
 		t.Fatal("expected non-nil averages")
 	}
 
-	if avg[0] != 1000 || avg[1] != 2000 {
-		t.Fatalf("expected [1000, 2000], got %v", avg)
+	// Seg A: avg(600, 1000) = 800. Seg B: avg(2000) = 2000 (skipped value excluded).
+	if avg[0] != 800 || avg[1] != 2000 {
+		t.Fatalf("expected [800, 2000], got %v", avg)
 	}
 }
 
-func TestAttemptsLatestCompletedSplits(t *testing.T) {
+func TestAttemptsLatestRunSplits(t *testing.T) {
 	att := NewAttempts("a-1", "t-1", "", "Any%", []string{"A", "B"})
 
-	if att.LatestCompletedSplits() != nil {
+	if att.LatestRunSplits() != nil {
 		t.Fatal("expected nil with no attempts")
 	}
 
 	att.AddAttempt([]int64{1000, 3000}, true)
 	att.AddAttempt([]int64{900, 2500}, true)
 
-	latest := att.LatestCompletedSplits()
+	latest := att.LatestRunSplits()
 	if latest == nil {
 		t.Fatal("expected non-nil latest splits")
 	}
@@ -170,29 +214,26 @@ func TestAttemptsLatestCompletedSplits(t *testing.T) {
 	}
 }
 
-func TestAttemptsLatestCompletedSplitsSkipsInvalid(t *testing.T) {
+func TestAttemptsLatestRunSplitsIncludesIncomplete(t *testing.T) {
 	att := NewAttempts("a-1", "t-1", "", "Any%", []string{"A", "B"})
 
 	att.AddAttempt([]int64{1000, 3000}, true)
-	att.AddAttempt([]int64{500}, false)
-	att.AddAttempt([]int64{800, 0}, true)
+	att.AddAttempt([]int64{500}, false) // most recent is incomplete
 
-	latest := att.LatestCompletedSplits()
+	latest := att.LatestRunSplits()
 	if latest == nil {
 		t.Fatal("expected non-nil")
 	}
 
-	if latest[0] != 1000 || latest[1] != 3000 {
-		t.Fatalf("expected [1000, 3000], got %v", latest)
+	if len(latest) != 1 || latest[0] != 500 {
+		t.Fatalf("expected [500], got %v", latest)
 	}
 }
 
 func TestDeleteAttempt(t *testing.T) {
 	att := NewAttempts("a-1", "t-1", "", "Any%", []string{"A", "B"})
 	att.AddAttempt([]int64{1000, 3000}, true)
-	UpdatePersonalBest(att, []int64{1000, 3000})
 	att.AddAttempt([]int64{900, 2500}, true)
-	UpdatePersonalBest(att, []int64{900, 2500})
 
 	// Delete the PB attempt.
 	if !att.DeleteAttempt(2) {
@@ -203,9 +244,10 @@ func TestDeleteAttempt(t *testing.T) {
 		t.Fatalf("expected 1 attempt, got %d", len(att.History))
 	}
 
-	// PB should have been recalculated to the remaining attempt.
-	if att.Segments[1].PersonalBestMS != 3000 {
-		t.Fatalf("expected recalculated PB 3000, got %d", att.Segments[1].PersonalBestMS)
+	// PB should now come from the remaining attempt.
+	pb := att.PersonalBestSplits()
+	if pb == nil || pb[1] != 3000 {
+		t.Fatalf("expected PB 3000, got %v", pb)
 	}
 
 	// Delete nonexistent.
@@ -217,7 +259,6 @@ func TestDeleteAttempt(t *testing.T) {
 func TestEditAttemptSplits(t *testing.T) {
 	att := NewAttempts("a-1", "t-1", "", "Any%", []string{"A", "B"})
 	att.AddAttempt([]int64{1000, 3000}, true)
-	UpdatePersonalBest(att, []int64{1000, 3000})
 
 	// Edit to a faster time.
 	if !att.EditAttemptSplits(1, []int64{800, 2000}) {
@@ -228,9 +269,10 @@ func TestEditAttemptSplits(t *testing.T) {
 		t.Fatalf("expected edited split 2000, got %d", att.History[0].SplitTimesMS[1])
 	}
 
-	// PB should reflect the new times.
-	if att.Segments[1].PersonalBestMS != 2000 {
-		t.Fatalf("expected PB 2000, got %d", att.Segments[1].PersonalBestMS)
+	// PB should reflect the edited history.
+	pb := att.PersonalBestSplits()
+	if pb == nil || pb[1] != 2000 {
+		t.Fatalf("expected PB 2000, got %v", pb)
 	}
 
 	// Edit nonexistent.
