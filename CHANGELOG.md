@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.0.8](https://github.com/tyrantkhan/goldsplit/compare/v0.0.7...v0.0.8) (2026-02-22)
+
+
+### Features
+
+* comparison splits, timer coloring, and best-time rename ([352c415](https://github.com/tyrantkhan/goldsplit/commit/352c415523ac7bd56d103dfe5c426e1490ff8144))
+
 ## [0.0.7](https://github.com/tyrantkhan/goldsplit/compare/v0.0.6...v0.0.7) (2026-02-22)
 
 
