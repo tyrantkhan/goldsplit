@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.6](https://github.com/tyrantkhan/goldsplit/compare/v0.0.5...v0.0.6) (2026-02-22)
+
+
+### Refactoring
+
+* compute comparison data on the fly from history ([3855c0c](https://github.com/tyrantkhan/goldsplit/commit/3855c0cef33aa6be5322644cefecf305761e216b))
+* compute comparison data on the fly from history ([368e6ab](https://github.com/tyrantkhan/goldsplit/commit/368e6ab857c4edcb15936b7f6b6d4caf055f6fbd)), closes [#20](https://github.com/tyrantkhan/goldsplit/issues/20)
+
 ## [0.0.5](https://github.com/tyrantkhan/goldsplit/compare/v0.0.4...v0.0.5) (2026-02-22)
 
 
