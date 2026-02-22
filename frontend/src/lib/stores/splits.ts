@@ -20,6 +20,17 @@ export function closeSettings() {
   viewMode.set(_previousView);
 }
 
+export function openAbout() {
+  let current: ViewMode = 'templates';
+  viewMode.subscribe(v => current = v)();
+  _previousView = current;
+  viewMode.set('about');
+}
+
+export function closeAbout() {
+  viewMode.set(_previousView);
+}
+
 export function initSplitEvents() {
   EventsOn('attempts:updated', (data: AttemptsData) => {
     if (data) {

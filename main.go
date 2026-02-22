@@ -2,6 +2,7 @@ package main
 
 import (
 	"embed"
+	"strings"
 
 	"github.com/wailsapp/wails/v2"
 	"github.com/wailsapp/wails/v2/pkg/options"
@@ -11,8 +12,15 @@ import (
 //go:embed all:frontend/dist
 var assets embed.FS
 
+//go:embed VERSION
+var rawVersion string
+
+var versionSuffix = "-dev" // overridden to "" via ldflags in release builds
+
+var version = strings.TrimSpace(rawVersion) + versionSuffix
+
 func main() {
-	app := NewApp()
+	app := NewApp(version)
 
 	err := wails.Run(&options.App{
 		Title:     "Goldsplit",

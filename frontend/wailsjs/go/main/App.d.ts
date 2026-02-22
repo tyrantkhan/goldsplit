@@ -17,6 +17,8 @@ export function DiscardAttempt():Promise<void>;
 
 export function EditAttemptSplits(arg1:string,arg2:number,arg3:Array<number>):Promise<Record<string, any>>;
 
+export function GetAppInfo():Promise<Record<string, any>>;
+
 export function GetAttemptHistory(arg1:string):Promise<Array<split.Attempt>>;
 
 export function GetCurrentAttempts():Promise<Record<string, any>>;

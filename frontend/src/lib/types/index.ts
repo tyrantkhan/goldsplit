@@ -62,7 +62,7 @@ export interface Delta {
   skipped: boolean;
 }
 
-export type ViewMode = 'templates' | 'template_detail' | 'template_setup' | 'attempts_setup' | 'timer' | 'settings' | 'attempt_editor';
+export type ViewMode = 'templates' | 'template_detail' | 'template_setup' | 'attempts_setup' | 'timer' | 'settings' | 'attempt_editor' | 'about';
 
 export interface HotkeyBindings {
   startSplit: string;

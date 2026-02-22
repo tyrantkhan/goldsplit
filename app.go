@@ -23,11 +23,19 @@ type App struct {
 	tmpl     *split.Template
 	attempts *split.Attempts
 	settings persist.Settings
+	version  string
 }
 
 // NewApp creates a new App instance.
-func NewApp() *App {
-	return &App{}
+func NewApp(version string) *App {
+	return &App{version: version}
+}
+
+// GetAppInfo returns application metadata for the frontend.
+func (a *App) GetAppInfo() map[string]any {
+	return map[string]any{
+		"version": a.version,
+	}
 }
 
 func (a *App) startup(ctx context.Context) {
@@ -171,6 +179,7 @@ func (a *App) DiscardAttempt() {
 // UndoSplit undoes the last split.
 func (a *App) UndoSplit() {
 	a.engine.UndoSplit()
+	a.emitDeltas()
 }
 
 // SkipSplit skips the current segment.
@@ -191,7 +200,9 @@ func (a *App) emitDeltas() {
 
 func (a *App) checkRunCompletion() {
 	if a.engine.CurrentState() == timer.Finished {
-		a.saveAttempt(true)
+		splits := a.engine.SplitTimesMS()
+		completed := len(splits) > 0 && splits[len(splits)-1] > 0
+		a.saveAttempt(completed)
 	}
 }
 
