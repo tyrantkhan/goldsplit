@@ -248,7 +248,23 @@ func (a *Attempts) DeleteAttempt(attemptID int) bool {
 // Returns false if the attempt is not found, the segment count mismatches,
 // or cumulative times are not monotonically increasing (for non-zero values).
 func (a *Attempts) EditAttemptSplits(attemptID int, newSplits []int64) bool {
-	if len(newSplits) != len(a.Segments) {
+	// Find the attempt first so we can validate against its actual split count.
+	var target *Attempt
+
+	for i := range a.History {
+		if a.History[i].ID == attemptID {
+			target = &a.History[i]
+
+			break
+		}
+	}
+
+	if target == nil {
+		return false
+	}
+
+	// New splits must match the attempt's existing count (incomplete runs have fewer than segments).
+	if len(newSplits) != len(target.SplitTimesMS) {
 		return false
 	}
 
@@ -267,14 +283,8 @@ func (a *Attempts) EditAttemptSplits(attemptID int, newSplits []int64) bool {
 		lastNonZero = v
 	}
 
-	for i := range a.History {
-		if a.History[i].ID == attemptID {
-			a.History[i].SplitTimesMS = newSplits
-			a.UpdatedAt = time.Now()
+	target.SplitTimesMS = newSplits
+	a.UpdatedAt = time.Now()
 
-			return true
-		}
-	}
-
-	return false
+	return true
 }

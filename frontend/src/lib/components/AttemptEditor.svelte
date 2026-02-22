@@ -88,16 +88,12 @@
     if (editingAttemptId === null) return;
     editError = '';
 
-    if (editInputs.length !== segmentNames.length) {
-      editError = 'Segment count mismatch';
-      return;
-    }
-
     const splits: number[] = [];
     for (let i = 0; i < editInputs.length; i++) {
+      const name = i < segmentNames.length ? segmentNames[i] : `Segment ${i + 1}`;
       const val = parseTime(editInputs[i]);
       if (val === null) {
-        editError = `Invalid time for "${segmentNames[i]}"`;
+        editError = `Invalid time for "${name}"`;
         return;
       }
       splits.push(val);
@@ -158,47 +154,49 @@
       <div class="attempt-list">
         {#each history as attempt}
           <div class="attempt-item">
-            <div class="attempt-header">
-              <span class="attempt-id">#{padId(attempt.id)}</span>
-              <span class="attempt-status" class:completed={attempt.completed}>
-                {attempt.completed ? 'Completed' : 'Incomplete'}
-              </span>
-              {#if attempt.completed && editingAttemptId !== attempt.id}
-                <span class="attempt-total">&middot; {formatRunTime(attempt.splitTimesMs[attempt.splitTimesMs.length - 1] || 0)}</span>
+            {#if editingAttemptId === attempt.id}
+              <div class="edit-sticky-header">
+                <div class="attempt-header">
+                  <span class="attempt-id">#{padId(attempt.id)}</span>
+                  <span class="attempt-status" class:completed={attempt.completed}>
+                    {attempt.completed ? 'Completed' : 'Incomplete'}
+                  </span>
+                  <div class="attempt-actions">
+                    <button class="small-btn" onclick={saveEditSplits}>Save</button>
+                    <button class="small-btn" onclick={cancelEditSplits}>Cancel</button>
+                  </div>
+                </div>
+                <div class="edit-grid col-labels">
+                  <span>Segment</span>
+                  <span>Split Time</span>
+                  <span>Seg. Time</span>
+                </div>
+              </div>
+              <div class="edit-rows">
+                {#each editInputs as _, i}
+                  <div class="edit-grid edit-row">
+                    <span class="seg-name">{i < segmentNames.length ? segmentNames[i] : `Segment ${i + 1}`}</span>
+                    <span><input class="split-input" type="text" bind:value={editInputs[i]} /></span>
+                    <span class="seg-time">{derivedSegTimes[i]}</span>
+                  </div>
+                {/each}
+              </div>
+              {#if editError}
+                <div class="edit-error">{editError}</div>
               {/if}
-              <div class="attempt-actions">
-                {#if editingAttemptId === attempt.id}
-                  <button class="small-btn" onclick={saveEditSplits}>Save</button>
-                  <button class="small-btn" onclick={cancelEditSplits}>Cancel</button>
-                {:else}
+            {:else}
+              <div class="attempt-header">
+                <span class="attempt-id">#{padId(attempt.id)}</span>
+                <span class="attempt-status" class:completed={attempt.completed}>
+                  {attempt.completed ? 'Completed' : 'Incomplete'}
+                </span>
+                {#if attempt.completed}
+                  <span class="attempt-total">&middot; {formatRunTime(attempt.splitTimesMs[attempt.splitTimesMs.length - 1] || 0)}</span>
+                {/if}
+                <div class="attempt-actions">
                   <button class="small-btn" onclick={() => startEditSplits(attempt)}>Edit</button>
                   <button class="small-btn danger" onclick={() => handleDeleteAttempt(attempt.id)}>Delete</button>
-                {/if}
-              </div>
-            </div>
-            {#if editingAttemptId === attempt.id}
-              <div class="edit-splits">
-                <table class="splits-table">
-                  <thead>
-                    <tr>
-                      <th class="col-seg">Segment</th>
-                      <th class="col-split">Split Time</th>
-                      <th class="col-segtime">Seg. Time</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {#each segmentNames as name, i}
-                      <tr>
-                        <td class="seg-name">{name}</td>
-                        <td><input class="split-input" type="text" bind:value={editInputs[i]} /></td>
-                        <td class="seg-time">{derivedSegTimes[i]}</td>
-                      </tr>
-                    {/each}
-                  </tbody>
-                </table>
-                {#if editError}
-                  <div class="edit-error">{editError}</div>
-                {/if}
+                </div>
               </div>
             {/if}
           </div>
@@ -248,7 +246,7 @@
   .content {
     flex: 1;
     overflow-y: auto;
-    padding: 8px 16px;
+    padding: 0 16px;
   }
 
   .empty {
@@ -261,12 +259,17 @@
     display: flex;
     flex-direction: column;
     gap: 6px;
+    padding: 8px 0;
   }
 
   .attempt-item {
     padding: 8px 10px;
     border-radius: 6px;
     background: var(--bg-secondary);
+  }
+
+  .attempt-item:has(.edit-sticky-header) {
+    padding-top: 0;
   }
 
   .attempt-header {
@@ -324,34 +327,38 @@
     background: rgba(255, 69, 58, 0.15);
   }
 
-  .splits-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 12px;
-    margin-top: 4px;
+  .edit-sticky-header {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: var(--bg-secondary);
   }
 
-  .splits-table th {
-    text-align: left;
+  .edit-sticky-header .attempt-header {
+    margin-bottom: 0;
+    padding: 8px 4px 4px;
+  }
+
+  .edit-grid {
+    display: grid;
+    grid-template-columns: 4fr 3fr 3fr;
+    font-size: 12px;
+  }
+
+  .edit-grid > span {
+    padding: 3px 6px;
+  }
+
+  .col-labels {
+    border-bottom: 1px solid var(--border);
+  }
+
+  .col-labels > span {
     font-size: 10px;
     font-weight: 600;
     color: var(--text-muted);
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    padding: 2px 6px 4px;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .splits-table td {
-    padding: 3px 6px;
-  }
-
-  .col-seg {
-    width: 40%;
-  }
-
-  .col-split, .col-segtime {
-    width: 30%;
   }
 
   .seg-name {
@@ -371,12 +378,6 @@
     border-radius: 4px;
     background: var(--bg-tertiary);
     box-sizing: border-box;
-  }
-
-  .edit-splits {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
   }
 
   .edit-error {
