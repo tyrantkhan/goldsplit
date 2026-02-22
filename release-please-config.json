@@ -3,10 +3,7 @@
     ".": {
       "release-type": "simple",
       "bump-minor-pre-major": true,
-      "bump-patch-for-minor-pre-major": true,
-      "extra-files": [
-        "VERSION"
-      ]
+      "bump-patch-for-minor-pre-major": true
     }
   }
 }

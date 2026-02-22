@@ -13,7 +13,7 @@ import (
 //go:embed all:frontend/dist
 var assets embed.FS
 
-//go:embed VERSION
+//go:embed version.txt
 var rawVersion string
 
 var versionSuffix = "-dev" // overridden to "" via ldflags in release builds
