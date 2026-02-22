@@ -10,6 +10,7 @@
   import IconSettings from './lib/icons/IconSettings.svelte';
   import TimerDisplay from './lib/components/TimerDisplay.svelte';
   import SplitsList from './lib/components/SplitsList.svelte';
+  import TimerStats from './lib/components/TimerStats.svelte';
   import Controls from './lib/components/Controls.svelte';
   import TemplateList from './lib/components/TemplateList.svelte';
   import TemplateSetup from './lib/components/TemplateSetup.svelte';
@@ -71,6 +72,7 @@
 
     <SplitsList />
     <TimerDisplay />
+    <TimerStats />
     <Controls />
   {:else if $viewMode === 'template_setup'}
     <TemplateSetup />
