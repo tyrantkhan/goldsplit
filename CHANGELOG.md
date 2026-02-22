@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2](https://github.com/tyrantkhan/goldsplit/compare/v0.0.1...v0.0.2) (2026-02-22)
+
+
+### Features
+
+* unify CI/CD by merging release-please into release workflow ([27c3acf](https://github.com/tyrantkhan/goldsplit/commit/27c3acf6c2b1e41617b30f6da4e64bfe19041bef))
+* unify CI/CD by merging release-please into release workflow ([dd6ffcf](https://github.com/tyrantkhan/goldsplit/commit/dd6ffcf64a5451f57855868a13d4f85acd7a7f0f)), closes [#7](https://github.com/tyrantkhan/goldsplit/issues/7)
+
 ## 0.0.1 (2026-02-22)
 
 
