@@ -76,6 +76,9 @@ jobs:
     permissions:
       contents: write
     steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/download-artifact@v4
         with:
           path: artifacts
@@ -85,6 +88,21 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
         run: gh release upload "${{ needs.release-please.outputs.tag_name }}" artifacts/*
+      - name: Append contributors to release notes
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ needs.release-please.outputs.tag_name }}
+        run: |
+          EXISTING=$(gh release view "$TAG" --json body -q .body)
+          CONTRIBUTORS=$(git log --format='%aN' | sort -u | sed 's/^/- /')
+          gh release edit "$TAG" --notes "$(cat <<NOTES
+          ${EXISTING}
+
+          ### Contributors
+          ${CONTRIBUTORS}
+          NOTES
+          )"
 
   publish-dev-build:
     name: Publish Dev Build
