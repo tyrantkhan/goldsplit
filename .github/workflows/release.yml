@@ -3,9 +3,21 @@ name: Release
 on:
   push:
     branches: [main]
-    tags: ["v*"]
 
 jobs:
+  release-please:
+    name: Release Please
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    outputs:
+      release_created: ${{ steps.rp.outputs.release_created }}
+      tag_name: ${{ steps.rp.outputs.tag_name }}
+    steps:
+      - id: rp
+        uses: googleapis/release-please-action@v4
+
   build:
     name: Build (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
@@ -56,9 +68,10 @@ jobs:
           name: ${{ matrix.artifact }}
           path: ${{ matrix.artifact }}
 
-  release:
-    name: Release
-    needs: build
+  publish-release:
+    name: Publish Release
+    needs: [release-please, build]
+    if: needs.release-please.outputs.release_created == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -67,21 +80,60 @@ jobs:
         with:
           path: artifacts
           merge-multiple: true
+      - name: Upload binaries to versioned release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: gh release upload "${{ needs.release-please.outputs.tag_name }}" artifacts/*
 
-      - name: Create release (tag push)
-        if: startsWith(github.ref, 'refs/tags/')
-        uses: softprops/action-gh-release@v2
+  publish-dev-build:
+    name: Publish Dev Build
+    needs: [release-please, build]
+    if: needs.release-please.outputs.release_created != 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
         with:
-          files: artifacts/*
-          generate_release_notes: true
+          fetch-depth: 0
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+      - name: Generate contributor list
+        id: contributors
+        run: |
+          CONTRIBUTORS=$(git log --format='%aN' | sort -u | sed 's/^/- /')
+          {
+            echo 'list<<EOF'
+            echo "$CONTRIBUTORS"
+            echo 'EOF'
+          } >> "$GITHUB_OUTPUT"
+      - name: Delete previous dev draft
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: gh release delete draft --yes 2>/dev/null || true
+      - name: Create draft dev release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          gh release create draft \
+            --title "Development Build" \
+            --draft \
+            --prerelease \
+            --target "${{ github.sha }}" \
+            --notes "$(cat <<'NOTES'
+          ## Development Build
 
-      - name: Create draft release (main push)
-        if: github.ref == 'refs/heads/main'
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: draft
-          name: Development Build
-          draft: true
-          prerelease: true
-          files: artifacts/*
-          generate_release_notes: true
+          Built from `main` at ${{ github.sha }}.
+
+          > **This is an automated pre-release build and may be unstable.**
+
+          ### Contributors
+          ${{ steps.contributors.outputs.list }}
+          NOTES
+          )" \
+            artifacts/*
