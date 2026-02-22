@@ -52,7 +52,7 @@
   const prevDeltaColor = $derived(
     prevSegDelta
       ? prevSegDelta.isBestEver
-        ? 'var(--best-segment)'
+        ? 'var(--best-time)'
         : prevSegDelta.segDeltaMs < 0
           ? prevSegDelta.gainedTime ? 'var(--ahead-gaining)' : 'var(--ahead-losing)'
           : prevSegDelta.segDeltaMs > 0

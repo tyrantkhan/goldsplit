@@ -539,9 +539,15 @@ func (a *App) UpdateSettings(settings persist.Settings) bool {
 		}
 	}
 
+	prevComparison := a.settings.Comparison
 	a.settings = settings
 	runtime.WindowSetAlwaysOnTop(a.ctx, settings.AlwaysOnTop)
 	runtime.EventsEmit(a.ctx, "settings:updated", settings)
+
+	// Re-emit attempts data when comparison changes (split rows show comparison splits).
+	if settings.Comparison != prevComparison && a.attempts != nil {
+		runtime.EventsEmit(a.ctx, "attempts:updated", a.getAttemptsData())
+	}
 
 	return true
 }
@@ -569,6 +575,7 @@ func (a *App) getAttemptsData() map[string]any {
 func (a *App) buildAttemptsData(att *split.Attempts) map[string]any {
 	pbSplits := att.PersonalBestSplits()
 	bestSegs := att.BestSegments()
+	compSplits := split.ComparisonSplits(att, a.settings.Comparison)
 
 	segments := make([]map[string]any, len(att.Segments))
 	for i, s := range att.Segments {
@@ -582,10 +589,16 @@ func (a *App) buildAttemptsData(att *split.Attempts) map[string]any {
 			bs = bestSegs[i]
 		}
 
+		var cs int64
+		if compSplits != nil && i < len(compSplits) {
+			cs = compSplits[i]
+		}
+
 		segments[i] = map[string]any{
-			"name":           s.Name,
-			"personalBestMs": pb,
-			"bestSegmentMs":  bs,
+			"name":              s.Name,
+			"personalBestMs":    pb,
+			"bestSegmentMs":     bs,
+			"comparisonSplitMs": cs,
 		}
 	}
 

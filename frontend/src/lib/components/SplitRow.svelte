@@ -6,6 +6,7 @@
   let {
     name,
     splitTimeMs = 0,
+    comparisonSplitMs = 0,
     personalBestMs = 0,
     delta = null,
     isActive = false,
@@ -13,11 +14,14 @@
   }: {
     name: string;
     splitTimeMs?: number;
+    comparisonSplitMs?: number;
     personalBestMs?: number;
     delta?: Delta | null;
     isActive?: boolean;
     isCompleted?: boolean;
   } = $props();
+
+  const referenceSplitMs = $derived(comparisonSplitMs > 0 ? comparisonSplitMs : personalBestMs);
 </script>
 
 <div class="split-row" class:active={isActive} class:completed={isCompleted}>
@@ -30,8 +34,8 @@
   <span class="time">
     {#if isCompleted}
       {formatSplitTime(splitTimeMs)}
-    {:else if personalBestMs > 0}
-      <span class="pb-time">{formatSplitTime(personalBestMs)}</span>
+    {:else if referenceSplitMs > 0}
+      <span class="pb-time">{formatSplitTime(referenceSplitMs)}</span>
     {:else}
       <span class="no-time">-</span>
     {/if}

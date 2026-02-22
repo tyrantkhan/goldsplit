@@ -144,7 +144,8 @@ func (a *Attempts) BestSegments() []int64 {
 
 // BestSegmentsCumulative returns cumulative splits built from each segment's best time.
 // Computed from all history (including incomplete runs).
-// Returns nil if any segment has no best time recorded.
+// Returns partial data: cumulative values up to the first segment with no best,
+// 0 for remaining. Returns nil if no segment has a best time.
 func (a *Attempts) BestSegmentsCumulative() []int64 {
 	best := a.BestSegments()
 	cumulative := make([]int64, len(a.Segments))
@@ -152,11 +153,15 @@ func (a *Attempts) BestSegmentsCumulative() []int64 {
 
 	for i, seg := range best {
 		if seg == 0 {
-			return nil
+			break
 		}
 
 		sum += seg
 		cumulative[i] = sum
+	}
+
+	if sum == 0 {
+		return nil
 	}
 
 	return cumulative

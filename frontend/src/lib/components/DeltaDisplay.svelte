@@ -13,7 +13,7 @@
   const colorVar = $derived(
     delta
       ? delta.isBestEver
-        ? '--best-segment'
+        ? '--best-time'
         : delta.isAhead
           ? delta.gainedTime ? '--ahead-gaining' : '--ahead-losing'
           : delta.deltaMs > 0
