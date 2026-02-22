@@ -39,8 +39,8 @@ func main() {
 				Message: "Version " + version,
 			},
 		},
-		OnStartup:        app.startup,
-		OnShutdown:       app.shutdown,
+		OnStartup:  app.startup,
+		OnShutdown: app.shutdown,
 		Bind: []interface{}{
 			app,
 		},
