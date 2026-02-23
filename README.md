@@ -66,6 +66,8 @@ Download the latest release for your platform from the [Releases](https://github
 - [Node.js](https://nodejs.org/) (for the frontend)
 - [Wails CLI](https://wails.io/docs/gettingstarted/installation) v2
 
+If you use [mise](https://mise.jdx.dev/), run `mise install` to set up Go, golangci-lint, and lefthook automatically.
+
 **Linux only:** GTK and WebKit development libraries are required. See [Wails Linux prerequisites](https://wails.io/docs/gettingstarted/installation#platform-specific-dependencies).
 
 ### Build
