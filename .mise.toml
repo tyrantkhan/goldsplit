@@ -1,4 +1,5 @@
 [tools]
 go = "1.25"
+node = "23.2"
 golangci-lint = "latest"
 lefthook = "latest"

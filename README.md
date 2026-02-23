@@ -52,13 +52,26 @@ Download the latest release for your platform from the [Releases](https://github
 | Windows  | `Goldsplit-windows-amd64.exe` |
 | Linux    | `goldsplit-linux-amd64` |
 
+> **macOS note:** The binary is not signed. On first launch, macOS Gatekeeper will block it. To allow it, run:
+> ```sh
+> xattr -cr /Applications/Goldsplit.app
+> ```
+> Alternatively, you can [build from source](#building-from-source).
+
 ## Building from Source
 
 ### Prerequisites
 
 - [Go](https://go.dev/) 1.25+
-- [Node.js](https://nodejs.org/) (for the frontend)
-- [Wails CLI](https://wails.io/docs/gettingstarted/installation) v2
+- [Node.js](https://nodejs.org/) 23+
+
+> **Tip:** If you use [mise](https://mise.jdx.dev/), run `mise install` to set up Go, Node.js, and dev tools automatically.
+
+Then install the Wails CLI:
+
+```sh
+make setup
+```
 
 **Linux only:** GTK and WebKit development libraries are required. See [Wails Linux prerequisites](https://wails.io/docs/gettingstarted/installation#platform-specific-dependencies).
 
@@ -84,6 +97,7 @@ make dev
 
 | Target | Description |
 |--------|-------------|
+| `make setup` | Install Wails CLI and other Go tools |
 | `make dev` | Start Wails dev server with hot reload |
 | `make build` | Production build |
 | `make lint` | Run golangci-lint (builds frontend first) |
