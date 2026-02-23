@@ -1,4 +1,7 @@
-.PHONY: lint frontend-check test dev build ci
+.PHONY: setup lint frontend-check test dev build ci
+
+setup:
+	go install github.com/wailsapp/wails/v2/cmd/wails@latest
 
 lint: frontend-build
 	golangci-lint run
