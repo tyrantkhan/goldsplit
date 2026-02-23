@@ -39,7 +39,7 @@
 
   const comparisonOptions = [
     { value: 'personal_best', label: 'Personal Best' },
-    { value: 'best_segments', label: 'Best Times' },
+    { value: 'best_segments', label: 'Best Segments' },
     { value: 'average_segments', label: 'Average Segments' },
     { value: 'latest_run', label: 'Latest Run' },
   ];

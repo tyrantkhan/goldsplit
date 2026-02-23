@@ -29,7 +29,7 @@
 
   async function handleDelete(e: Event, id: string) {
     e.stopPropagation();
-    if (!await ConfirmDialog('Delete Game', 'Delete this game and all its attempts?')) return;
+    if (!await ConfirmDialog('Delete Game', 'Delete this game and all its categories?')) return;
     await DeleteTemplate(id);
     await refreshList();
   }

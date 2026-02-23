@@ -15,7 +15,7 @@
   import TemplateList from './lib/components/TemplateList.svelte';
   import TemplateSetup from './lib/components/TemplateSetup.svelte';
   import TemplateDetail from './lib/components/TemplateDetail.svelte';
-  import AttemptsSetup from './lib/components/AttemptsSetup.svelte';
+  import CategorySetup from './lib/components/CategorySetup.svelte';
   import AttemptEditor from './lib/components/AttemptEditor.svelte';
   import Settings from './lib/components/Settings.svelte';
   import About from './lib/components/About.svelte';
@@ -79,7 +79,7 @@
   {:else if $viewMode === 'template_detail'}
     <TemplateDetail />
   {:else if $viewMode === 'attempts_setup'}
-    <AttemptsSetup />
+    <CategorySetup />
   {:else if $viewMode === 'attempt_editor' && $currentAttempts}
     <AttemptEditor attemptsId={$currentAttempts.id} categoryName={$currentAttempts.categoryName} segmentNames={$currentAttempts.segments.map(s => s.name)} />
   {:else if $viewMode === 'settings'}

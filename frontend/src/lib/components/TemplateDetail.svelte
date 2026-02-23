@@ -120,7 +120,7 @@
       <button class="icon-btn" onclick={startEdit} title="Edit game">
         <IconEdit />
       </button>
-      <button class="icon-btn accent" onclick={handleNewCategory} title="New attempt">
+      <button class="icon-btn accent" onclick={handleNewCategory} title="New category">
         <IconPlus />
       </button>
     </TopNav>
@@ -129,8 +129,8 @@
 
     {#if categories.length === 0}
       <div class="empty">
-        <p>No attempts yet</p>
-        <p class="sub">Create an attempt to start tracking</p>
+        <p>No categories yet</p>
+        <p class="sub">Create a category to start tracking</p>
       </div>
     {:else}
       <div class="list">

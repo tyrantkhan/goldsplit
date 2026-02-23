@@ -22,7 +22,7 @@
 </script>
 
 <div class="page">
-  <TopNav title="New Attempt" subtitle="For {$currentTemplate?.name || ''}" onBack={handleCancel} />
+  <TopNav title="New Category" subtitle="For {$currentTemplate?.name || ''}" onBack={handleCancel} />
 
   <div class="form-content">
     <label>
