@@ -52,6 +52,12 @@ Download the latest release for your platform from the [Releases](https://github
 | Windows  | `Goldsplit-windows-amd64.exe` |
 | Linux    | `goldsplit-linux-amd64` |
 
+> **macOS note:** The binary is not signed. On first launch, macOS Gatekeeper will block it. To allow it, run:
+> ```sh
+> xattr -cr /Applications/Goldsplit.app
+> ```
+> Alternatively, you can [build from source](#building-from-source).
+
 ## Building from Source
 
 ### Prerequisites
