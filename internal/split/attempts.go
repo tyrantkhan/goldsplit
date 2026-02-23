@@ -244,6 +244,125 @@ func (a *Attempts) DeleteAttempt(attemptID int) bool {
 	return true
 }
 
+// HasEstimableGaps reports whether an attempt has skipped segments that can be
+// interpolated — i.e. at least one run of effectively-skipped segments that is
+// bounded by real splits on both sides.
+func (a *Attempts) HasEstimableGaps(attemptID int) bool {
+	var target *Attempt
+
+	for i := range a.History {
+		if a.History[i].ID == attemptID {
+			target = &a.History[i]
+
+			break
+		}
+	}
+
+	if target == nil {
+		return false
+	}
+
+	skipped := markSkipped(target.SplitTimesMS)
+
+	for i := 0; i < len(skipped); i++ {
+		if !skipped[i] {
+			continue
+		}
+
+		start := i
+		for i < len(skipped) && skipped[i] {
+			i++
+		}
+
+		if start > 0 && i < len(skipped) {
+			return true
+		}
+	}
+
+	return false
+}
+
+// EstimateGaps interpolates skipped segments in an attempt by evenly
+// distributing the time gap between surrounding real splits. Returns true if
+// any gaps were filled.
+func (a *Attempts) EstimateGaps(attemptID int) bool {
+	var target *Attempt
+
+	for i := range a.History {
+		if a.History[i].ID == attemptID {
+			target = &a.History[i]
+
+			break
+		}
+	}
+
+	if target == nil {
+		return false
+	}
+
+	splits := target.SplitTimesMS
+	skipped := markSkipped(splits)
+	changed := false
+
+	for i := 0; i < len(skipped); i++ {
+		if !skipped[i] {
+			continue
+		}
+
+		start := i
+		for i < len(skipped) && skipped[i] {
+			i++
+		}
+
+		end := i
+
+		// Need anchors on both sides.
+		if start == 0 || end >= len(splits) {
+			continue
+		}
+
+		startVal := splits[start-1]
+		endVal := splits[end]
+		count := int64(end - start + 1) // intervals between anchors
+		step := (endVal - startVal) / count
+
+		for j := start; j < end; j++ {
+			offset := int64(j - start + 1)
+			splits[j] = startVal + step*offset
+		}
+
+		changed = true
+	}
+
+	if changed {
+		a.UpdatedAt = time.Now()
+	}
+
+	return changed
+}
+
+// markSkipped returns a bool slice marking each index as effectively skipped:
+// either the cumulative value is 0, or it equals the last non-zero value before it.
+func markSkipped(splits []int64) []bool {
+	skipped := make([]bool, len(splits))
+
+	for i := range splits {
+		if splits[i] == 0 {
+			skipped[i] = true
+
+			continue
+		}
+
+		if i > 0 {
+			if prev, ok := lastNonZeroBefore(splits, i); ok && splits[i] == prev {
+				skipped[i] = true
+			}
+		}
+	}
+
+	return skipped
+}
+
 // EditAttemptSplits updates split times for an attempt.
 // Returns false if the attempt is not found, the segment count mismatches,
 // or cumulative times are not monotonically increasing (for non-zero values).

@@ -383,6 +383,162 @@ func TestPersonalBestSplitsNormalizesEffectivelySkipped(t *testing.T) {
 	}
 }
 
+func TestEstimateGapsMiddle(t *testing.T) {
+	att := NewAttempts("a-1", "t-1", "", "Any%", []string{"A", "B", "C", "D", "E"})
+	// Segments B-D effectively skipped (same cumulative as A).
+	att.AddAttempt([]int64{1000, 1000, 1000, 1000, 5000}, true)
+
+	if !att.HasEstimableGaps(1) {
+		t.Fatal("expected gaps to be estimable")
+	}
+
+	if !att.EstimateGaps(1) {
+		t.Fatal("expected gaps to be filled")
+	}
+
+	// Gap: endVal=5000, startVal=1000, count=4 intervals, step=1000.
+	expected := []int64{1000, 2000, 3000, 4000, 5000}
+	for i, v := range att.History[0].SplitTimesMS {
+		if v != expected[i] {
+			t.Fatalf("index %d: expected %d, got %d", i, expected[i], v)
+		}
+	}
+
+	// No gaps remain.
+	if att.HasEstimableGaps(1) {
+		t.Fatal("expected no gaps after estimation")
+	}
+}
+
+func TestEstimateGapsMultipleRegions(t *testing.T) {
+	att := NewAttempts("a-1", "t-1", "", "Any%", []string{"A", "B", "C", "D", "E", "F", "G"})
+	// Two gap regions: B skipped, D-E skipped.
+	att.AddAttempt([]int64{1000, 1000, 3000, 3000, 3000, 6000, 7000}, true)
+
+	if !att.EstimateGaps(1) {
+		t.Fatal("expected gaps to be filled")
+	}
+
+	splits := att.History[0].SplitTimesMS
+	// Region 1: B skipped. startVal=1000, endVal=3000, count=2, step=1000. B=2000.
+	if splits[1] != 2000 {
+		t.Fatalf("index 1: expected 2000, got %d", splits[1])
+	}
+
+	// Region 2: D-E skipped. startVal=3000, endVal=6000, count=3, step=1000. D=4000, E=5000.
+	if splits[3] != 4000 {
+		t.Fatalf("index 3: expected 4000, got %d", splits[3])
+	}
+
+	if splits[4] != 5000 {
+		t.Fatalf("index 4: expected 5000, got %d", splits[4])
+	}
+}
+
+func TestEstimateGapsAtStart(t *testing.T) {
+	att := NewAttempts("a-1", "t-1", "", "Any%", []string{"A", "B", "C"})
+	// A skipped (0), B and C real.
+	att.AddAttempt([]int64{0, 2000, 3000}, true)
+
+	if att.HasEstimableGaps(1) {
+		t.Fatal("expected false: start-only gap has no left anchor")
+	}
+
+	// Should not change anything (gap at start has no left anchor).
+	if att.EstimateGaps(1) {
+		t.Fatal("expected no change for start-only gap")
+	}
+
+	if att.History[0].SplitTimesMS[0] != 0 {
+		t.Fatal("start gap should be untouched")
+	}
+}
+
+func TestEstimateGapsAtEnd(t *testing.T) {
+	att := NewAttempts("a-1", "t-1", "", "Any%", []string{"A", "B", "C"})
+	// A real, B-C skipped (same cumulative).
+	att.AddAttempt([]int64{1000, 1000, 1000}, true)
+
+	// Gap at end has no right anchor.
+	if att.EstimateGaps(1) {
+		t.Fatal("expected no change for end-only gap")
+	}
+
+	if att.History[0].SplitTimesMS[2] != 1000 {
+		t.Fatal("end gap should be untouched")
+	}
+}
+
+func TestEstimateGapsNoGaps(t *testing.T) {
+	att := NewAttempts("a-1", "t-1", "", "Any%", []string{"A", "B", "C"})
+	att.AddAttempt([]int64{1000, 2000, 3000}, true)
+
+	if att.HasEstimableGaps(1) {
+		t.Fatal("expected no estimable gaps")
+	}
+
+	if att.EstimateGaps(1) {
+		t.Fatal("expected no change")
+	}
+}
+
+func TestEstimateGapsMixedSkipTypes(t *testing.T) {
+	att := NewAttempts("a-1", "t-1", "", "Any%", []string{"A", "B", "C", "D", "E"})
+	// B is 0 (explicit skip), C has same cumulative as A (effectively skipped).
+	att.AddAttempt([]int64{1000, 0, 1000, 4000, 5000}, true)
+
+	if !att.EstimateGaps(1) {
+		t.Fatal("expected gaps to be filled")
+	}
+
+	// Gap region: indices 1-2. startVal=1000, endVal=4000, count=3, step=1000.
+	splits := att.History[0].SplitTimesMS
+	if splits[1] != 2000 {
+		t.Fatalf("index 1: expected 2000, got %d", splits[1])
+	}
+
+	if splits[2] != 3000 {
+		t.Fatalf("index 2: expected 3000, got %d", splits[2])
+	}
+}
+
+func TestEstimateGapsNonexistentAttempt(t *testing.T) {
+	att := NewAttempts("a-1", "t-1", "", "Any%", []string{"A", "B"})
+
+	if att.HasEstimableGaps(99) {
+		t.Fatal("expected false for nonexistent attempt")
+	}
+
+	if att.EstimateGaps(99) {
+		t.Fatal("expected false for nonexistent attempt")
+	}
+}
+
+func TestEstimateGapsStartAndMiddle(t *testing.T) {
+	att := NewAttempts("a-1", "t-1", "", "Any%", []string{"A", "B", "C", "D", "E"})
+	// A skipped (no left anchor), C-D skipped (has anchors).
+	att.AddAttempt([]int64{0, 2000, 2000, 2000, 5000}, true)
+
+	if !att.EstimateGaps(1) {
+		t.Fatal("expected middle gap to be filled")
+	}
+
+	splits := att.History[0].SplitTimesMS
+	// A stays 0 (no left anchor).
+	if splits[0] != 0 {
+		t.Fatalf("index 0: expected 0, got %d", splits[0])
+	}
+
+	// C-D gap: startVal=2000, endVal=5000, count=3, step=1000.
+	if splits[2] != 3000 {
+		t.Fatalf("index 2: expected 3000, got %d", splits[2])
+	}
+
+	if splits[3] != 4000 {
+		t.Fatalf("index 3: expected 4000, got %d", splits[3])
+	}
+}
+
 func TestEditAttemptSplitsAcceptsSkips(t *testing.T) {
 	att := NewAttempts("a-1", "t-1", "", "Any%", []string{"A", "B", "C"})
 	att.AddAttempt([]int64{1000, 2000, 3000}, true)
