@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.12](https://github.com/tyrantkhan/goldsplit/compare/v0.0.11...v0.0.12) (2026-02-23)
+
+
+### Features
+
+* add estimate gaps for skipped segments and UI improvements ([8212c26](https://github.com/tyrantkhan/goldsplit/commit/8212c26e0256fe710fae2064d81bfd908b2e5844))
+* estimate gaps for skipped segments ([63bced1](https://github.com/tyrantkhan/goldsplit/commit/63bced1c3be0ba208bf1401c36fe0ac54b96b478))
+
 ## [0.0.11](https://github.com/tyrantkhan/goldsplit/compare/v0.0.10...v0.0.11) (2026-02-23)
 
 
