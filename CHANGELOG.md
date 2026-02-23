@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.11](https://github.com/tyrantkhan/goldsplit/compare/v0.0.10...v0.0.11) (2026-02-23)
+
+
+### Bug Fixes
+
+* correct UI labels and improve build setup ([525662f](https://github.com/tyrantkhan/goldsplit/commit/525662f894c4268baf91a116c6add9e739c3a2a0))
+* correct UI labels and improve build setup ([08f0273](https://github.com/tyrantkhan/goldsplit/commit/08f027339bfd8a37d37c085b688b04d97c719488))
+
 ## [0.0.10](https://github.com/tyrantkhan/goldsplit/compare/v0.0.9...v0.0.10) (2026-02-22)
 
 
