@@ -520,6 +520,50 @@ func (a *App) EditAttemptSplits(attemptsID string, attemptID int, newSplits []in
 	return a.buildAttemptsData(att)
 }
 
+// HasAttemptGaps reports whether an attempt has skipped segments that can be interpolated.
+func (a *App) HasAttemptGaps(attemptsID string, attemptID int) bool {
+	if a.store == nil {
+		return false
+	}
+
+	att, err := a.store.LoadAttempts(attemptsID)
+	if err != nil {
+		return false
+	}
+
+	return att.HasEstimableGaps(attemptID)
+}
+
+// FillAttemptGaps interpolates skipped segments in an attempt and returns updated data.
+func (a *App) FillAttemptGaps(attemptsID string, attemptID int) map[string]any {
+	if a.store == nil {
+		return nil
+	}
+
+	att, err := a.store.LoadAttempts(attemptsID)
+	if err != nil {
+		fmt.Printf("Warning: could not load attempts: %v\n", err)
+
+		return nil
+	}
+
+	if !att.EstimateGaps(attemptID) {
+		return nil
+	}
+
+	if err := a.store.SaveAttempts(att); err != nil {
+		fmt.Printf("Warning: could not save attempts: %v\n", err)
+
+		return nil
+	}
+
+	if a.attempts != nil && a.attempts.ID == attemptsID {
+		a.attempts = att
+	}
+
+	return a.buildAttemptsData(att)
+}
+
 // GetAttemptHistory returns the full attempt history for an attempts entry.
 func (a *App) GetAttemptHistory(attemptsID string) []split.Attempt {
 	if a.store == nil {

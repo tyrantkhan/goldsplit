@@ -42,6 +42,10 @@ export function EditAttemptSplits(arg1, arg2, arg3) {
   return window['go']['main']['App']['EditAttemptSplits'](arg1, arg2, arg3);
 }
 
+export function FillAttemptGaps(arg1, arg2) {
+  return window['go']['main']['App']['FillAttemptGaps'](arg1, arg2);
+}
+
 export function GetAppInfo() {
   return window['go']['main']['App']['GetAppInfo']();
 }
@@ -64,6 +68,10 @@ export function GetDeltas() {
 
 export function GetSettings() {
   return window['go']['main']['App']['GetSettings']();
+}
+
+export function HasAttemptGaps(arg1, arg2) {
+  return window['go']['main']['App']['HasAttemptGaps'](arg1, arg2);
 }
 
 export function ListAttemptsForTemplate(arg1) {

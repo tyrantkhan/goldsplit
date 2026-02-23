@@ -114,11 +114,11 @@
     </div>
   {:else}
     <TopNav title={$currentTemplate?.name || ''} subtitle="{$currentTemplate?.segmentNames.length || 0} segments" onBack={backToTemplates}>
-      <button class="icon-btn" onclick={openSettings} title="Settings">
-        <IconSettings />
-      </button>
       <button class="icon-btn" onclick={startEdit} title="Edit game">
         <IconEdit />
+      </button>
+      <button class="icon-btn" onclick={openSettings} title="Settings">
+        <IconSettings />
       </button>
       <button class="icon-btn accent" onclick={handleNewCategory} title="New category">
         <IconPlus />

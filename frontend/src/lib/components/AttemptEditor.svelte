@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { GetAttemptHistory, DeleteSingleAttempt, EditAttemptSplits, UpdateCategoryName } from '../../../wailsjs/go/main/App';
+  import { GetAttemptHistory, DeleteSingleAttempt, EditAttemptSplits, UpdateCategoryName, HasAttemptGaps, FillAttemptGaps, ConfirmDialog } from '../../../wailsjs/go/main/App';
   import { viewMode } from '../stores/splits';
   import { formatSplitTime, formatRunTime, parseTime } from '../utils/format';
   import TopNav from './TopNav.svelte';
@@ -20,6 +20,7 @@
   let editingAttemptId: number | null = $state(null);
   let editInputs: string[] = $state([]);
   let editError = $state('');
+  let gapAttemptIds: Set<number> = $state(new Set());
 
   const idWidth = $derived(String(history.length).length);
   function padId(id: number): string {
@@ -32,6 +33,13 @@
 
   async function refreshHistory() {
     history = (await GetAttemptHistory(attemptsId)) || [];
+    const ids = new Set<number>();
+    for (const attempt of history) {
+      if (await HasAttemptGaps(attemptsId, attempt.id)) {
+        ids.add(attempt.id);
+      }
+    }
+    gapAttemptIds = ids;
   }
 
   function startEditName() {
@@ -53,6 +61,11 @@
   }
 
   async function handleDeleteAttempt(attemptId: number) {
+    const ok = await ConfirmDialog(
+      'Delete Attempt',
+      `Are you sure you want to delete attempt #${attemptId}? This cannot be undone.`
+    );
+    if (!ok) return;
     await DeleteSingleAttempt(attemptsId, attemptId);
     await refreshHistory();
   }
@@ -127,6 +140,16 @@
     editError = '';
   }
 
+  async function handleEstimateGaps(attemptId: number) {
+    const ok = await ConfirmDialog(
+      'Estimate Gaps',
+      'This will estimate times for skipped segments by evenly distributing the time between surrounding splits. This cannot be undone.'
+    );
+    if (!ok) return;
+    await FillAttemptGaps(attemptsId, attemptId);
+    await refreshHistory();
+  }
+
   function handleBack() {
     viewMode.set('template_detail');
   }
@@ -196,6 +219,10 @@
                 <div class="attempt-actions">
                   <button class="small-btn" onclick={() => startEditSplits(attempt)}>Edit</button>
                   <button class="small-btn danger" onclick={() => handleDeleteAttempt(attempt.id)}>Delete</button>
+                  {#if gapAttemptIds.has(attempt.id)}
+                    <span class="flex-break"></span>
+                    <button class="small-btn" onclick={() => handleEstimateGaps(attempt.id)}>Estimate Gaps</button>
+                  {/if}
                 </div>
               </div>
             {/if}
@@ -297,11 +324,14 @@
   .attempt-total {
     font-family: var(--timer-font);
     color: var(--text-secondary);
+    white-space: nowrap;
   }
 
   .attempt-actions {
     margin-left: auto;
     display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
     gap: 4px;
   }
 
@@ -317,6 +347,11 @@
   .small-btn:hover {
     background: var(--bg-hover);
     color: var(--text-primary);
+  }
+
+  .flex-break {
+    flex-basis: 100%;
+    height: 0;
   }
 
   .small-btn.danger {

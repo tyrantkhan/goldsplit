@@ -23,6 +23,8 @@ export function DiscardSuspendedRun():Promise<void>;
 
 export function EditAttemptSplits(arg1:string,arg2:number,arg3:Array<number>):Promise<Record<string, any>>;
 
+export function FillAttemptGaps(arg1:string,arg2:number):Promise<Record<string, any>>;
+
 export function GetAppInfo():Promise<Record<string, any>>;
 
 export function GetAttemptHistory(arg1:string):Promise<Array<split.Attempt>>;
@@ -34,6 +36,8 @@ export function GetCurrentTemplate():Promise<Record<string, any>>;
 export function GetDeltas():Promise<Array<split.Delta>>;
 
 export function GetSettings():Promise<persist.Settings>;
+
+export function HasAttemptGaps(arg1:string,arg2:number):Promise<boolean>;
 
 export function ListAttemptsForTemplate(arg1:string):Promise<Array<persist.AttemptsSummary>>;
 
